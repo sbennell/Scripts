@@ -1,7 +1,10 @@
 #Powershell script to customize windows Before Frist boot
-#Version 2020.3
+#Version 2020.4
 #Stewart Bennell 24/05/2020
 #
+
+$tsenv = New-Object -COMObject Microsoft.SMS.TSEnvironment
+$OSDisk = "$($tsenv.Value("OSDisk"))"
 
 #Loads the Default User Profile NTUSER.DAT file
 Write-Output "Loads the Default User Profile NTUSER.DAT file"
