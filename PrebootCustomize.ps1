@@ -1,11 +1,11 @@
 #Powershell script to customize windows Before Frist boot
-#Version 2020.2
+#Version 2020.3
 #Stewart Bennell 24/05/2020
 #
 
 #Loads the Default User Profile NTUSER.DAT file
 Write-Output "Loads the Default User Profile NTUSER.DAT file"
-reg load HKU\Default_User %OSDisk%\Users\Default\NTUSER.DAT
+reg load HKU\Default_User %OSDisk%\users\default\ntuser.dat
 
 #Show This PC on Desktop
 Write-Output "Show This PC on Desktop"
@@ -30,8 +30,12 @@ Set-ItemProperty -Path Registry::HKU\Default_User\SOFTWARE\Microsoft\Windows\Cur
 Write-Output "Remove search bar and only show icon"
 Set-ItemProperty -Path Registry::HKU\Default_User\SOFTWARE\Microsoft\Windows\CurrentVersion\Search -Name SearchboxTaskbarMode -Value 1
 
-#Remove Cortana Buttion
-Write-Output "Remove Cortana Buttion"
+#Disables People icon on Taskbar
+Write-Output "Disables People icon on Taskbar"
+Set-ItemProperty -Path Registry::HKU\Default_User\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\People -Name PeopleBand -Value 0
+
+#Disables Cortana Buttion
+Write-Output "Disables Cortana Buttion"
 Set-ItemProperty -Path Registry::HKU\Default_User\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced -Name ShowCortanaButton -Value 0
 
 #Turn Off Automatically Restart Apps After Sign-In 
@@ -81,5 +85,19 @@ Set-ItemProperty -Path Registry::HKLM\Default_software\Policies\Microsoft -Name 
 Write-Output "Disable Acrylic Blur Effect on Sign-in Screen"
 Set-ItemProperty -Path Registry::HKLM\Default_software\Policies\Microsoft\Windows\System -Name DisableAcrylicBackgroundOnLogon -Value 1
 
+#Disabling Windows Feedback Experience program
+Write-Output "Disabling Windows Feedback Experience program"
+Set-ItemProperty -Path Registry::HKLM\Default_software\Microsoft\Windows\CurrentVersion\AdvertisingInfo -Name Enabled -Value 0
+
+#Disabling Windows Feedback Experience program
+Write-Output "Adding Registry key to prevent bloatware apps from returning"
+Set-ItemProperty -Path Registry::HKLM\Default_software\Policies\Microsoft\Windows\CloudContent -Name DisableWindowsConsumerFeatures -Value 1
+
+#Turns off Data Collection via the AllowTelemtry key by changing it to 0
+Write-Output "Turns off Data Collection via the AllowTelemtry key by changing it to 0"
+Set-ItemProperty -Path Registry::HKLM\Default_software\Microsoft\Windows\CurrentVersion\Policies\DataCollection -Name AllowTelemetry -Value 1
+
 #Unload the Software Hive
 reg unload HKU\Default_User
+
+Write-Output "Finished all tasks."
