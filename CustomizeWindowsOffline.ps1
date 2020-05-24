@@ -1,14 +1,15 @@
 #Powershell script to customize windows Before Frist boot
-#Version 2020.4.1
+#Version 2020.4.2
 #Stewart Bennell 24/05/2020
 #
 
 $tsenv = New-Object -COMObject Microsoft.SMS.TSEnvironment
 $OSDisk = "$($tsenv.Value("OSDisk"))"
-
+$OSDTargetSystemRoot = "$($tsenv.Value("OSDisk"))" + "\Windows"
+ 
 #Loads the Default User Profile NTUSER.DAT file
-Write-Output "Loads the Default User Profile NTUSER.DAT file"
-reg load HKU\Default_User %OSDisk\users\default\ntuser.dat
+Write-Output "Loads the Default User Profile NTUSER.DAT file" 
+REG LOAD HKU\Default_User $OSDisk\Users\Default\NTUSER.DAT
 
 #Show This PC on Desktop
 Write-Output "Show This PC on Desktop"
@@ -66,7 +67,6 @@ Write-Output "prevents Default the apps from redownloading"
 Set-ItemProperty -Path Registry::HKU\Default_User\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name SystemPaneSuggestionsEnabled -Value 0
 Set-ItemProperty -Path Registry::HKU\Default_User\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name PreInstalledAppsEnabled -Value 0
 Set-ItemProperty -Path Registry::HKU\Default_User\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name OemPreInstalledAppsEnabled -Value 0
-
 
 #Unload the Default User Profile NTUSER.DAT file
 Write-Output "Unload the Default User Profile NTUSER.DAT file"
