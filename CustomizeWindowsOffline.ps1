@@ -1,5 +1,5 @@
 #Powershell script to customize windows Before Frist boot
-#Version 2020.5
+#Version 2020.5.1
 #Stewart Bennell 24/05/2020
 #
 
@@ -8,12 +8,14 @@ $OSDisk = "$($tsenv.Value("OSDisk"))"
 $OSDTargetSystemRoot = "$($tsenv.Value("OSDisk"))" + "\Windows"
  
 #Loads the Default User Profile NTUSER.DAT file
-Write-Output "Loads the Default User Profile NTUSER.DAT file" 
-REG LOAD HKU\Default_User $OSDisk\Users\Default\NTUSER.DAT
+Write-Host "Creating HKU Drive..." 
+New-PSDrive HKU -Root HKEY_Users -PSProvider Registry
+Write-Host "Loading Default user hive..."
+REG LOAD HKU\Default $OSDisk\Users\Default\NTUSER.DAT
 
-#Checking if HideDesktopIcons Exist in HKU\Default_User\Software\Microsoft\Windows\CurrentVersion\Explorer
+#Checking if HideDesktopIcons Exist in HKU\Default\Software\Microsoft\Windows\CurrentVersion\Explorer
 Write-Output "Checking for HideDesktopIcons"
-$HideDesktopIcons = "Registry::HKU\Default_User\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\"
+$HideDesktopIcons = "Registry::HKU\Default\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\"
     If (!(Test-Path $HideDesktopIcons)) {
 		Write-Output "Cant Find HideDesktopIcons."
         New-Item $HideDesktopIcons 
@@ -22,7 +24,7 @@ Write-Output "Found HideDesktopIcons"
 
 
 Write-Output "Checking for NewStartPanel"
-$NewStartPanel = "Registry::HKU\Default_User\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel\"
+$NewStartPanel = "Registry::HKU\Default\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel\"
     If (!(Test-Path $NewStartPanel)) {
 		Write-Output "Cant Find NewStartPanel."
         New-Item $NewStartPanel 
@@ -30,7 +32,7 @@ $NewStartPanel = "Registry::HKU\Default_User\Software\Microsoft\Windows\CurrentV
 Write-Output "Found NewStartPanel"
 
 Write-Output "Checking for ClassicStartMenu"
-$ClassicStartMenu = "Registry::HKU\Default_User\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu\"
+$ClassicStartMenu = "Registry::HKU\Default\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu\"
     If (!(Test-Path $ClassicStartMenu)) {
 		Write-Output "Cant Find ClassicStartMenu. Going to create ClassicStartMenu"
         New-Item $ClassicStartMenu 
@@ -54,7 +56,7 @@ Set-ItemProperty $ClassicStartMenu "{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}" -Val
 
 #Checking for AutoplayHandlers
 Write-Output "Checking for AutoplayHandlers"
-$AutoplayHandlers = "Registry::HKU\Default_User\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\"
+$AutoplayHandlers = "Registry::HKU\Default\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\"
     If (!(Test-Path $AutoplayHandlers)) {
 		Write-Output "Cant Find AutoplayHandlers."
         New-Item $AutoplayHandlers 
@@ -66,7 +68,7 @@ Set-ItemProperty $AutoplayHandlers DisableAutoplay -Value 1
 
 #Checking for Search
 Write-Output "Checking for Search"
-$Search = "Registry::HKU\Default_User\SOFTWARE\Microsoft\Windows\CurrentVersion\Search\"
+$Search = "Registry::HKU\Default\SOFTWARE\Microsoft\Windows\CurrentVersion\Search\"
     If (!(Test-Path $Search)) {
 		Write-Output "Cant Find Search."
         New-Item $Search 
@@ -78,7 +80,7 @@ Set-ItemProperty $Search SearchboxTaskbarMode -Value 1
 
 #Checking for People
 Write-Output "Checking for People"
-$People = "Registry::HKU\Default_User\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\People\"
+$People = "Registry::HKU\Default\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\People\"
     If (!(Test-Path $People)) {
 		Write-Output "Cant Find People."
         New-Item $People 
@@ -90,7 +92,7 @@ Set-ItemProperty $People PeopleBand -Value 0
 
 #Checking for Advanced
 Write-Output "Checking for Advanced"
-$Advanced = "Registry::HKU\Default_User\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\"
+$Advanced = "Registry::HKU\Default\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\"
     If (!(Test-Path $Advanced)) {
 		Write-Output "Cant Find Advanced."
         New-Item $Advanced 
@@ -111,7 +113,7 @@ Set-ItemProperty $Advanced HideFileExt -Value 0
 
 #Checking for Winlogon
 Write-Output "Checking for Winlogon"
-$Winlogon = "Registry::HKU\Default_User\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\"
+$Winlogon = "Registry::HKU\Default\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\"
     If (!(Test-Path $Winlogon)) {
 		Write-Output "Cant Find Winlogon."
         New-Item $Winlogon 
@@ -122,7 +124,7 @@ Set-ItemProperty $Winlogon RestartApps -Value 0
 
 #Checking for Ribbon
 Write-Output "Checking for Ribbon"
-$Ribbon = "Registry::HKU\Default_User\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Ribbon\"
+$Ribbon = "Registry::HKU\Default\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Ribbon\"
     If (!(Test-Path $Ribbon)) {
 		Write-Output "Cant Find Ribbon."
         New-Item $Ribbon 
@@ -136,7 +138,7 @@ Set-ItemProperty $Ribbon MinimizedStateTabletModeOn -Value 0
 
 #Checking for ContentDeliveryManager
 Write-Output "Checking for ContentDeliveryManager"
-$ContentDeliveryManager = "Registry::HKU\Default_User\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager\"
+$ContentDeliveryManager = "Registry::HKU\Default\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager\"
     If (!(Test-Path $ContentDeliveryManager)) {
 		Write-Output "Cant Find ContentDeliveryManager."
         New-Item $ContentDeliveryManager 
@@ -148,13 +150,30 @@ Set-ItemProperty $ContentDeliveryManager SystemPaneSuggestionsEnabled -Value 0
 Set-ItemProperty $ContentDeliveryManager PreInstalledAppsEnabled -Value 0
 Set-ItemProperty $ContentDeliveryManager OemPreInstalledAppsEnabled -Value 0
 
+Write-Host "Sleeping for 20 seconds..." 
+sleep -Seconds 20
+
 #Unload the Default User Profile NTUSER.DAT file
-Write-Output "Unload the Default User Profile NTUSER.DAT file"
-reg unload HKU\Default_User
+Write-Host "Unloading Default user hive..." 
+$unloaded = $false
+$attempts = 0
+while (!$unloaded -and ($attempts -le 5))
+{
+	[gc]::Collect() # necessary call to be able to unload registry hive
+	REG UNLOAD HKU\Default
+	$unloaded = $?
+	$attempts += 1
+}
+if (!$unloaded)
+{
+	Write-Warning "Unable to dismount default user registry hive at HKU\DEFAULT!" 
+}
+Write-Host "Removing PS Drive..." 
+Remove-PSDrive -Name HKU
 
 #Loads the Software Hive
 Write-Output "Loads the Software Hive"
-reg load HKLM\Default_software %OSDisk\Windows\System32\config\software
+reg load HKLM\Default_software $OSDisk\Windows\System32\config\software
 
 #Checking for Explorer
 Write-Output "Checking for ContentDeliveryManager"
@@ -232,6 +251,9 @@ Write-Output "Found DataCollection"
 #Turns off Data Collection via the AllowTelemtry key by changing it to 0
 Write-Output "Turns off Data Collection via the AllowTelemtry key by changing it to 0"
 Set-ItemProperty $DataCollection AllowTelemetry -Value 0
+
+Write-Host "Sleeping for 20 seconds..." 
+sleep -Seconds 20
 
 #Unload the Software Hive
 reg unload HKLM\Default_software
