@@ -1,5 +1,5 @@
 #Powershell script to customize windows Before Frist boot
-#Version 2020.4
+#Version 2020.4.1
 #Stewart Bennell 24/05/2020
 #
 
@@ -8,7 +8,7 @@ $OSDisk = "$($tsenv.Value("OSDisk"))"
 
 #Loads the Default User Profile NTUSER.DAT file
 Write-Output "Loads the Default User Profile NTUSER.DAT file"
-reg load HKU\Default_User %OSDisk%\users\default\ntuser.dat
+reg load HKU\Default_User %OSDisk\users\default\ntuser.dat
 
 #Show This PC on Desktop
 Write-Output "Show This PC on Desktop"
@@ -74,7 +74,7 @@ reg unload HKU\Default_User
 
 #Loads the Software Hive
 Write-Output "Loads the Software Hive"
-reg load HKLM\Default_software %OSDisk%\Windows\System32\config\software
+reg load HKLM\Default_software %OSDisk\Windows\System32\config\software
 
 #Disable Edge desktop shortcut
 Write-Output "Disable Edge desktop shortcut"
