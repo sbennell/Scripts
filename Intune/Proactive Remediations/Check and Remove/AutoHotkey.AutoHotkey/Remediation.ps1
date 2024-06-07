@@ -1,14 +1,14 @@
-﻿$app_2upgrade = "AutoHotkey.AutoHotkey"
+﻿$app_2remove = "AutoHotkey.AutoHotkey"
 
 try{
     # resolve and navigate to winget.exe
     $Winget = Get-ChildItem -Path (Join-Path -Path (Join-Path -Path $env:ProgramFiles -ChildPath "WindowsApps") -ChildPath "Microsoft.DesktopAppInstaller*_x64*\winget.exe")
 
     # uninstall command
-    &$winget uninstall $app_2upgrade --silent --force
+    &$winget uninstall $app_2remove --silent --force
     exit 0
 
 }catch{
-    Write-Error "Error while installing uninstall for: $app_2upgrade"
+    Write-Error "Error while installing uninstall for: $app_2remove"
     exit 1\\
 }
