@@ -1,4 +1,4 @@
-﻿$app_2upgrade = "Microsoft.Teams"
+﻿$app_2upgrade = "Microsoft.EdgeWebView2Runtime"
 
 try{
     # resolve and navigate to winget.exe
