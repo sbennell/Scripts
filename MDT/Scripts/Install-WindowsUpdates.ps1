@@ -2,13 +2,15 @@
 # // 
 # // Copyright (c) Stewart Bennell. All rights reserved.
 # // 
-# // File:      Copy-Drivers.ps1
+# // File:      Install-WindowsUpdates.ps1
 # // 
-# // Version:   9.10.24-03
+# // Version:   09.10.24-03
+# //
 # // Version History
 # // 25.01.24-01: Initial version
-# // 20.08.24-02: Revised to not run between 08:30-15:30 on excluded gateways
+# // 20.08.24-02: Revised to not run between 08:30-15:30 on excluded gateways for schools with shaped internet Connect to microsoft
 # // 09.10.24-03: Add Logging for debug
+# // 09.10.24-04: Refined default gateway retrieval using WMI and improved logging structure
 # // 
 # // Purpose:   Running Windows updates During Deployment.
 # // 
@@ -24,7 +26,8 @@ $endTime = [datetime]::Parse("15:30:00")
 # MDT environment setup
 $TSEnv = New-Object -COMObject Microsoft.SMS.TSEnvironment
 $DeployShare = $TSEnv.Value("DeployRoot")
-$logFile = "$DeployShare\Logs\$($OSDComputerName)\Copy-Drivers_$(Get-Date -Format 'yyyy-MM-dd_HHmmss').log"
+$OSDComputerName = $TSEnv.Value("OSDComputerName")
+$logFile = "$DeployShare\Logs\$($OSDComputerName)\Install-WindowsUpdates_$(Get-Date -Format 'yyyy-MM-dd_HHmmss').log"
 
 # Ensure log directory exists
 if (-not (Test-Path -Path (Split-Path $logFile))) {
@@ -42,8 +45,14 @@ function Log-Message {
 
 # Function to get the default gateway
 function Get-DefaultGateway {
-    $gateway = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.PrefixLength -eq 0 } | Select-Object -ExpandProperty DefaultGateway)
-    return $gateway
+    $gateway = (Get-WmiObject Win32_NetworkAdapterConfiguration | Where-Object { $_.IPEnabled -and $_.DefaultIPGateway }) | Select-Object -First 1 -ExpandProperty DefaultIPGateway
+    
+    if ([string]::IsNullOrEmpty($gateway)) {
+        Log-Message "No default gateway found."
+        return $null
+    } else {
+        return $gateway
+    }
 }
 
 # Function to check if the current time is outside a specified range
@@ -87,6 +96,13 @@ function Perform-Updates {
 # Get the default gateway
 $defaultGateway = Get-DefaultGateway
 
+# Check if the default gateway is missing
+if ($defaultGateway -eq $null) {
+    Log-Message "No default gateway detected. Skipping updates."
+    exit 1
+}
+
+
 # Log current gateway and time
 Log-Message "Current Default Gateway: $defaultGateway, Current Time: $(Get-Date -Format 'HH:mm:ss')"
 
@@ -95,10 +111,7 @@ $netConnectionProfile = Get-NetConnectionProfile
 if ($netConnectionProfile.IPv4Connectivity -eq "Internet" -or $netConnectionProfile.IPv6Connectivity -eq "Internet") {
     # Check if the default gateway is in the excluded list
     if ($excludedGateways -contains $defaultGateway) {
-        Log-Message "Current gateway ($defaultGateway) is excluded. Proceeding with updates."
-        Perform-Updates
-    } else {
-        Log-Message "Current gateway ($defaultGateway) requires time check."
+        Log-Message "Current gateway ($defaultGateway) is excluded list. Proceeding with time Check."
         # Check if the time is outside the prohibited range
         if (Is-TimeOutsideRange -startTime $startTime -endTime $endTime) {
             Log-Message "Current time is outside the prohibited range. Proceeding with updates."
@@ -106,6 +119,9 @@ if ($netConnectionProfile.IPv4Connectivity -eq "Internet" -or $netConnectionProf
         } else {
             Log-Message "Current time is within the prohibited range. Skipping updates."
         }
+    } else {
+        Log-Message "Current gateway ($defaultGateway) and is not in excluded list so will run updates."
+		Perform-Updates
     }
 } else {
     Log-Message "No internet connection detected."
