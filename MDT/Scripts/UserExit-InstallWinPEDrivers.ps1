@@ -2,7 +2,7 @@
 # // 
 # // Copyright (c) Stewart Bennell. All rights reserved.
 # // 
-# // Microsoft Deployment Toolkit Solution Accelerator
+# // Microsoft Deployment Toolkit Powershell Scripts
 # //
 # // File:      UserExit-InstallWinPEDrivers.ps1
 # // 
