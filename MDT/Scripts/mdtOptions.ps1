@@ -8,6 +8,7 @@
 	30.12.21-02:	add Temporarily close the TS progress UI
 	21.12.22-01:    Remove Set Recovery
 	10.10.24-01:    Added HWID Activation Checkbox
+	10.10.24-02:    Updated version label
 #>
 
 # Temporarily close the TS progress UI
@@ -76,8 +77,9 @@ $Header.height                   = 10
 $Header.location                 = New-Object System.Drawing.Point(49,8)
 $Header.Font                     = New-Object System.Drawing.Font('Microsoft Sans Serif',20,[System.Drawing.FontStyle]([System.Drawing.FontStyle]::Bold))
 
+# Updated Version label
 $Version                         = New-Object system.Windows.Forms.Label
-$Version.text                    = "Version:21.12.22-01"
+$Version.text                    = "Version:10.10.24-02"  # Updated version here
 $Version.AutoSize                = $true
 $Version.width                   = 25
 $Version.height                  = 10
