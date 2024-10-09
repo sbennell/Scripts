@@ -16,8 +16,8 @@ extend distro /usr/bin/distro
 
 #Hardware Detection
 # (uncomment for x86 platforms)
-#extend manufacturer '/bin/cat /sys/devices/virtual/dmi/id/sys_vendor'
-#extend hardware '/bin/cat /sys/devices/virtual/dmi/id/product_name'
+extend manufacturer '/bin/cat /sys/devices/virtual/dmi/id/sys_vendor'
+extend hardware '/bin/cat /sys/devices/virtual/dmi/id/product_name'
 #extend serial '/bin/cat /sys/devices/virtual/dmi/id/product_serial'
 
 # (uncomment for ARM platforms)
