@@ -6,13 +6,14 @@
 # //
 # // File:      UserExit-InstallWinPEDrivers.ps1
 # // 
-# // Version:   2024.10.9-3
+# // Version:   2024.10.10-4
 # // 
 # // Version History
 # // 2024.10.9-1: Initial version of PowerShell version
 # // 2024.10.9-2: Bugfix for failing to run PNPUtil.exe to install drivers
 # // 2024.10.9-3: Add Logging for debug 
-# 
+# // 2024.10.10-4: Get make and model and install drivers for that model if exist or else install all drivers.
+# // 
 # // Purpose: Installs drivers from "Drivers\WinPE" and installs them to the running Windows PE environment. 
 # // 
 # // ***************************************************************************
@@ -53,6 +54,79 @@ function Log-Message {
     Add-Content -Path $logFile -Value "$timestamp - $message"
 }
 
+function Get-MakeModel {
+	Log-Message "Start function for get make/model."
+
+	# Get the manufacturer (make) of the system from BIOS
+	$systemInfo = Get-WmiObject -Class Win32_ComputerSystem
+	$ComputerSystemProduct = Get-WmiObject -Query "SELECT * FROM Win32_ComputerSystemProduct"
+	foreach ($obj in $ComputerSystemProduct) {
+	    if ($obj.Version) {
+	        $sCSPVersion = $obj.Version.Trim()
+	    }
+	}
+	
+	$sMake = $systemInfo.Manufacturer
+	$sModel = $systemInfo.Model
+	
+    switch ($sMake) {
+        "Dell Computer Corporation" { $makeAlias = "Dell" }
+        "Dell Inc." { $makeAlias = "Dell" }
+        "Dell Computer Corp." { $makeAlias = "Dell" }
+        "IBM" { $makeAlias = "Lenovo" }
+        "LENOVO" { $makeAlias = "Lenovo" }
+        "Hewlett-Packard" { $makeAlias = "HP" }
+        "HP" { $makeAlias = "HP" }
+        "SAMSUNG ELECTRONICS CO., LTD." { $makeAlias = "Samsung" }
+        "Microsoft Corporation" { $makeAlias = "Microsoft" }
+        "VMware, Inc." { $makeAlias = "VMware" }
+        default { $makeAlias = $sMake }
+    }
+	Log-Message "Get-MakeModel for Manufacturer: $makeAlias"
+
+    switch ($sMake) {
+        "IBM" { 
+            if ($sCSPVersion) {
+                switch ($sCSPVersion) {
+                    "ThinkPad T61p" { $ModelAlias = "ThinkPad T61" }
+                    Default { $ModelAlias = $sCSPVersion }
+                }
+            }
+            if (-not $ModelAlias) {
+                $sModelSubString = $sModel.Substring(0, 4)
+                switch ($sModelSubString) {
+                    "1706" { $ModelAlias = "ThinkPad X60" }
+                    Default { $ModelAlias = $sModel }
+                }
+            }
+        }
+        "LENOVO" {
+            if ($sCSPVersion) {
+                switch ($sCSPVersion) {
+                    "ThinkPad T61p" { $ModelAlias = "ThinkPad T61" }
+                    Default { $ModelAlias = $sCSPVersion }
+                }
+            }
+            if (-not $ModelAlias) {
+                $sModelSubString = $sModel.Substring(0, 4)
+                switch ($sModelSubString) {
+                    "1706" { $ModelAlias = "ThinkPad X60" }
+                    Default { $ModelAlias = $sModel }
+                }
+            }
+        }
+        Default {
+            if ($sModel -match "\(") {
+                $ModelAlias = $sModel.Substring(0, $sModel.IndexOf("(")).Trim()
+            } else {
+                $ModelAlias = $sModel
+            }
+        }
+    }
+	Log-Message "Get-MakeModel for Model: $ModelAlias"
+    return @{ Make = $makeAlias; Model = $ModelAlias }
+}
+
 # Check if running in Windows PE environment
 function Check-WindowsPE {
     return (Test-Path "X:\Windows\System32\winpeshl.ini")
@@ -69,7 +143,13 @@ function Install-Drivers {
         Write-Host "This script must be run in a Windows PE environment."
         return
     }
-
+	#Get Make and Model
+	Log-Message "Get Make and Model."
+	$MakeModel = Get-MakeModel
+	Log-Message "Make:$($ModelAlias.Make) Model:$($ModelAlias.Model)"
+	
+	$folderName =  "Drivers\WinPE\$($ModelAlias.Make)\$($ModelAlias.Model)"
+		
     Log-Message "Starting driver installation process."
 
     # Get all ready drives
@@ -80,7 +160,12 @@ function Install-Drivers {
 
         if (Test-Path $folderPath) {
             Log-Message "Found driver folder: $folderPath"
-            Install-DriversIn $folderPath
+            $folderName1 =  "$folderPath\$($ModelAlias.Make)\$($ModelAlias.Model)"
+			if (Test-Path $folderName1) {
+			Install-DriversIn $folderName1	
+			} else {
+				Install-DriversIn $folderName				
+			}
         } else {
             Log-Message "Driver folder not found: $folderPath"
         }
@@ -140,4 +225,5 @@ function Install-DriversIn {
 }
 
 # Start the driver installation process
+
 Install-Drivers
