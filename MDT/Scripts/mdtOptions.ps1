@@ -1,15 +1,45 @@
-<# 
-	MDT Custom Variable
-    Stewart Bennell 26/06/2021
-	
-	Version History
-	26.12.21-01:	Able to set Organisation and Set Recovery 
-	26.12.21-02:	Add Variable Textbox to set one Custom Variable
-	30.12.21-02:	add Temporarily close the TS progress UI
-	21.12.22-01:    Remove Set Recovery
-	10.10.24-01:    Added HWID Activation Checkbox
-	10.10.24-02:    Updated version label
-#>
+# // ***************************************************************************
+# // 
+# // Copyright (c) Stewart Bennell. All rights reserved.
+# // 
+# // Microsoft Deployment Toolkit Powershell Scripts
+# //
+# // File:      mdtOptions.ps1
+# // 
+# // Version:   09.10.24-03
+# //
+# // Version History
+# // 25.01.24-01: Initial version
+# // 26.12.21-01:	Able to set Organisation and Set Recovery 
+# // 26.12.21-02:	Add Variable Textbox to set one Custom Variable
+# // 30.12.21-02:	Add Temporarily close the TS progress UI
+# // 21.12.22-01:   Remove Set Recovery
+# // 10.10.24-01:   Added HWID Activation Checkbox
+# // 10.10.24-03:   Added logging
+# // 
+# // Purpose:   Running Windows updates During Deployment.
+# // 
+# // ***************************************************************************
+
+# MDT environment setup
+$TSEnv = New-Object -COMObject Microsoft.SMS.TSEnvironment
+$DeployShare = $TSEnv.Value("DeployRoot")
+
+$logFile = "$DeployShare\Logs\$($OSDComputerName)\MDToptions.log"
+
+# Ensure log directory exists
+if (-not (Test-Path -Path (Split-Path $logFile))) {
+    New-Item -ItemType Directory -Path (Split-Path $logFile) -Force
+}
+
+# Function to log messages
+function Log-Message {
+    param (
+        [string]$message
+    )
+    $timestamp = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
+    Add-Content -Path "$logFile" -Value "$timestamp - $message"
+
 
 # Temporarily close the TS progress UI
 $TSProgressUI = New-Object -COMObject Microsoft.SMS.TSProgressUI
@@ -79,7 +109,7 @@ $Header.Font                     = New-Object System.Drawing.Font('Microsoft San
 
 # Updated Version label
 $Version                         = New-Object system.Windows.Forms.Label
-$Version.text                    = "Version:10.10.24-02"  # Updated version here
+$Version.text                    = "Version:10.10.24-03"  # Updated version here
 $Version.AutoSize                = $true
 $Version.width                   = 25
 $Version.height                  = 10
@@ -92,19 +122,24 @@ $Done.Add_Click({ Set-Settings })
 
 Function Set-Settings 
 {	
+	# Set organisation and log it
+	#$TSEnv = New-Object -COMObject Microsoft.SMS.TSEnvironment
 	$organisation = $SetOrganisation.Text.ToUpper()
-	$TSEnv = New-Object -COMObject Microsoft.SMS.TSEnvironment
 	$TSEnv.Value("organisation") = "$($organisation)"
-	Write-Host  $organisation
+	Log-Message "Organisation set to: $organisation"
 	
+	# Set Option1 variable and log it
 	$Option1 = $SetVariable.Text.ToUpper()
 	$TSEnv.Value("Option1") = "$($Option1)"
-	Write-Host  $Option1
+	Log-Message "Option1 set to: $Option1"
 	
-	# Set HWID Activation value based on the checkbox state
+	# Set HWID Activation based on the checkbox state and log it
 	$HWIDActivation = $HWIDActivationCheckbox.Checked
 	$TSEnv.Value("HWIDActivation") = "$($HWIDActivation)"
-	Write-Host "HWID Activation set to: $HWIDActivation"
+	Log-Message "HWID Activation set to: $HWIDActivation"
+	
+	# Log done button clicked
+	Log-Message "Settings completed. Closing the form."
 	
 	$Form.Close()
 }
