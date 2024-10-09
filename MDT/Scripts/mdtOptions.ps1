@@ -26,6 +26,7 @@
 # MDT environment setup
 $TSEnv = New-Object -COMObject Microsoft.SMS.TSEnvironment
 $DeployShare = $TSEnv.Value("DeployRoot")
+$OSDComputerName = $TSEnv.Value("OSDComputerName")
 
 $logFile = "$DeployShare\Logs\$($OSDComputerName)\MDToptions.log"
 
