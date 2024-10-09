@@ -56,7 +56,7 @@ function Log-Message {
 }
 
 function Get-MakeModel {
-	Log-Message "Start function for get make/model."
+	Log-Message "Start function to get Manufacturer/Model."
 
 	# Get the manufacturer (make) of the system from BIOS
 	$systemInfo = Get-WmiObject -Class Win32_ComputerSystem
@@ -83,7 +83,7 @@ function Get-MakeModel {
         "VMware, Inc." { $makeAlias = "VMware" }
         default { $makeAlias = $sMake }
     }
-	Log-Message "Get-MakeModel for Manufacturer: $makeAlias"
+	Log-Message "Function Get-MakeModel Manufacturer: $makeAlias"
 
     switch ($sMake) {
         "IBM" { 
@@ -124,7 +124,7 @@ function Get-MakeModel {
             }
         }
     }
-	Log-Message "Get-MakeModel for Model: $MakeModel"
+	Log-Message "Function Get-MakeModel Model: $MakeModel"
     return @{ Make = $makeAlias; Model = $MakeModel }
 }
 
@@ -145,14 +145,9 @@ function Install-Drivers {
         return
     }
 	#Get Make and Model
-	Log-Message "Get Make and Model."
 	$MakeModel = Get-MakeModel
-	Log-Message "Make:$($MakeModel.Make) Model:$($MakeModel.Model)"
-	
-	$folderName =  "Drivers\WinPE\$($MakeModel.Make)\$($MakeModel.Model)"
-		
+			
     Log-Message "Starting driver installation process."
-
     # Get all ready drives
     $drives = Get-PSDrive -PSProvider FileSystem | Where-Object { $_.Root -and (Test-Path $_.Root) }
 
