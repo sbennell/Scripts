@@ -6,13 +6,14 @@
 # //
 # // File:      UserExit-InstallWinPEDrivers.ps1
 # // 
-# // Version:   2024.10.10-4
+# // Version:   2024.10.10-5
 # // 
 # // Version History
 # // 2024.10.9-1: Initial version of PowerShell version
 # // 2024.10.9-2: Bugfix for failing to run PNPUtil.exe to install drivers
 # // 2024.10.9-3: Add Logging for debug 
 # // 2024.10.10-4: Get make and model and install drivers for that model if exist or else install all drivers.
+# // 2024.10.10-5: bugfix get make and model.
 # // 
 # // Purpose: Installs drivers from "Drivers\WinPE" and installs them to the running Windows PE environment. 
 # // 
@@ -88,43 +89,43 @@ function Get-MakeModel {
         "IBM" { 
             if ($sCSPVersion) {
                 switch ($sCSPVersion) {
-                    "ThinkPad T61p" { $ModelAlias = "ThinkPad T61" }
-                    Default { $ModelAlias = $sCSPVersion }
+                    "ThinkPad T61p" { $MakeModel = "ThinkPad T61" }
+                    Default { $MakeModel = $sCSPVersion }
                 }
             }
-            if (-not $ModelAlias) {
+            if (-not $MakeModel) {
                 $sModelSubString = $sModel.Substring(0, 4)
                 switch ($sModelSubString) {
-                    "1706" { $ModelAlias = "ThinkPad X60" }
-                    Default { $ModelAlias = $sModel }
+                    "1706" { $MakeModel = "ThinkPad X60" }
+                    Default { $MakeModel = $sModel }
                 }
             }
         }
         "LENOVO" {
             if ($sCSPVersion) {
                 switch ($sCSPVersion) {
-                    "ThinkPad T61p" { $ModelAlias = "ThinkPad T61" }
-                    Default { $ModelAlias = $sCSPVersion }
+                    "ThinkPad T61p" { $MakeModel = "ThinkPad T61" }
+                    Default { $MakeModel = $sCSPVersion }
                 }
             }
-            if (-not $ModelAlias) {
+            if (-not $MakeModel) {
                 $sModelSubString = $sModel.Substring(0, 4)
                 switch ($sModelSubString) {
-                    "1706" { $ModelAlias = "ThinkPad X60" }
-                    Default { $ModelAlias = $sModel }
+                    "1706" { $MakeModel = "ThinkPad X60" }
+                    Default { $MakeModel = $sModel }
                 }
             }
         }
         Default {
             if ($sModel -match "\(") {
-                $ModelAlias = $sModel.Substring(0, $sModel.IndexOf("(")).Trim()
+                $MakeModel = $sModel.Substring(0, $sModel.IndexOf("(")).Trim()
             } else {
-                $ModelAlias = $sModel
+                $MakeModel = $sModel
             }
         }
     }
-	Log-Message "Get-MakeModel for Model: $ModelAlias"
-    return @{ Make = $makeAlias; Model = $ModelAlias }
+	Log-Message "Get-MakeModel for Model: $MakeModel"
+    return @{ Make = $makeAlias; Model = $MakeModel }
 }
 
 # Check if running in Windows PE environment
@@ -146,9 +147,9 @@ function Install-Drivers {
 	#Get Make and Model
 	Log-Message "Get Make and Model."
 	$MakeModel = Get-MakeModel
-	Log-Message "Make:$($ModelAlias.Make) Model:$($ModelAlias.Model)"
+	Log-Message "Make:$($MakeModel.Make) Model:$($MakeModel.Model)"
 	
-	$folderName =  "Drivers\WinPE\$($ModelAlias.Make)\$($ModelAlias.Model)"
+	$folderName =  "Drivers\WinPE\$($MakeModel.Make)\$($MakeModel.Model)"
 		
     Log-Message "Starting driver installation process."
 
@@ -160,7 +161,7 @@ function Install-Drivers {
 
         if (Test-Path $folderPath) {
             Log-Message "Found driver folder: $folderPath"
-            $folderName1 =  "$folderPath\$($ModelAlias.Make)\$($ModelAlias.Model)"
+            $folderName1 =  "$folderPath\$($MakeModel.Make)\$($MakeModel.Model)"
 			if (Test-Path $folderName1) {
 			Install-DriversIn $folderName1	
 			} else {
