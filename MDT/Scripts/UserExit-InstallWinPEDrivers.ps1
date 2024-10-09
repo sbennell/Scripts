@@ -6,7 +6,7 @@
 # //
 # // File:      UserExit-InstallWinPEDrivers.ps1
 # // 
-# // Version:   2024.10.10-5
+# // Version:   2024.10.10-6
 # // 
 # // Version History
 # // 2024.10.9-1: Initial version of PowerShell version
@@ -14,6 +14,7 @@
 # // 2024.10.9-3: Add Logging for debug 
 # // 2024.10.10-4: Get make and model and install drivers for that model if exist or else install all drivers.
 # // 2024.10.10-5: bugfix get make and model.
+# // 2024.10.10-6: add More loging.
 # // 
 # // Purpose: Installs drivers from "Drivers\WinPE" and installs them to the running Windows PE environment. 
 # // 
@@ -56,7 +57,7 @@ function Log-Message {
 }
 
 function Get-MakeModel {
-	Log-Message "Start function to get Manufacturer/Model."
+	Log-Message "Start function to get make/model."
 
 	# Get the manufacturer (make) of the system from BIOS
 	$systemInfo = Get-WmiObject -Class Win32_ComputerSystem
@@ -155,11 +156,14 @@ function Install-Drivers {
         $folderPath = Join-Path -Path $drive.Root -ChildPath $folderName
 
         if (Test-Path $folderPath) {
-            Log-Message "Found driver folder: $folderPath"
+            Log-Message "Found driver in  folder: $folderPath"
             $folderName1 =  "$folderPath\$($MakeModel.Make)\$($MakeModel.Model)"
+			Log-Message "Check if there is Drives for $($MakeModel.Make) $($MakeModel.Model)"
 			if (Test-Path $folderName1) {
-			Install-DriversIn $folderName1	
+				Log-Message "Found driver in folder: $folderPath\$($MakeModel.Make)\$($MakeModel.Model)"
+				Install-DriversIn $folderName1	
 			} else {
+				Log-Message "no dDrives for $($MakeModel.Make) $($MakeModel.Model) install all drivers"
 				Install-DriversIn $folderName				
 			}
         } else {
