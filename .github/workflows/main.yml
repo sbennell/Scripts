@@ -1,4 +1,4 @@
-name: Deploy via ftp
+name: Winget-AutoUpdate upload
 on: push
 jobs:
   deploy:
