@@ -1,0 +1,16 @@
+name: Deploy via ftp
+on: push
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Upload ftp
+      uses: genietim/ftp-action@releases/v4
+      with:
+        host: syn341.syd2.hostyourservices.net #${{ secrets.FTP_SERVER }}
+        user: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        localDir: "Scripts/Windows/Winget-AutoUpdate"
+        remoteDir: "bennell.me/downloads"
