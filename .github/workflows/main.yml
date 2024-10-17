@@ -9,9 +9,9 @@ jobs:
     - name: Upload ftp
       uses: SamKirkland/FTP-Deploy-Action@4.0.0
       with:
-        server: syn341.syd2.hostyourservices.net #${{ secrets.FTP_SERVER }}
-        username: bennell@bennell.me
-        password: "2q#UW^lhR(8S"
+        server: syn111.syd2.hostyourservices.net #${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
         protocol: ftps
         localDir: "Scripts/Windows/Winget-AutoUpdate"
         server-dir: "downloads/"
