@@ -15,3 +15,4 @@ jobs:
         protocol: ftps
         localDir: "Scripts/Windows/Winget-AutoUpdate"
         server-dir: "downloads/"
+        git-ftp-args: --insecure --all
