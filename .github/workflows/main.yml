@@ -13,6 +13,6 @@ jobs:
         username: bennelldownload@bennell.me
         password: ${{ secrets.FTP_PASSWORD }} #"2q#UW^lhR(8S"
         protocol: ftps
-        local-dir: "Scripts/Windows/Winget-AutoUpdate/"
+        local-dir: "Windows/Winget-AutoUpdate/"
         server-dir: "Winget-AutoUpdate/"
         git-ftp-args: --insecure --all
