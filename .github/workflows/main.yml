@@ -11,7 +11,7 @@ jobs:
       with:
         server: syn341.syd2.hostyourservices.net #${{ secrets.FTP_SERVER }}
         username: bennell@bennell.me
-        password: ${{ secrets.FTP_PASSWORD }}
+        password: 2q#UW^lhR(8S
         protocol: ftps
         localDir: "Scripts/Windows/Winget-AutoUpdate"
         server-dir: "downloads/"
