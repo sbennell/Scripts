@@ -14,4 +14,4 @@ jobs:
         password: ${{ secrets.FTP_PASSWORD }}
         protocol: ftps
         localDir: "Scripts/Windows/Winget-AutoUpdate"
-        server-dir: "bennell.me/downloads/"
+        server-dir: "downloads/"
