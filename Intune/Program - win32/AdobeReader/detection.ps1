@@ -1,4 +1,4 @@
-$wingetID = "Notepad++.Notepad++"
+$wingetID = "Adobe.Acrobat.Reader.64-bit"
 
 # Resolve winget_exe
 $winget_exe = Resolve-Path "C:\Program Files\WindowsApps\Microsoft.DesktopAppInstaller_*_*__8wekyb3d8bbwe\winget.exe"

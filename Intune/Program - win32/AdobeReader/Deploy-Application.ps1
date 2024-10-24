@@ -108,7 +108,7 @@ Try {
     ##*===============================================
     ## Variables: Application
     [String]$appVendor = ''
-    [String]$appName = 'Notepad++'
+    [String]$appName = 'Adobe Acrobat Reader 64-bit'
     [String]$appVersion = 'winget auto'
     [String]$appArch = 'x64'
     [String]$appLang = 'MUI'
@@ -215,7 +215,7 @@ Try {
         if (!$winget_exe){Write-Error "Winget not installed"}
 
         # Installation via winget
-        & $winget_exe install "Notepad++.Notepad++" --silent --accept-source-agreements --accept-package-agreements
+        & $winget_exe install "Adobe.Acrobat.Reader.64-bit" --silent --accept-source-agreements --accept-package-agreements
 
 
         ##*===============================================
