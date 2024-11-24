@@ -1,7 +1,7 @@
 <#
 .Synopsis
 Created on:   2/08/2024
-Updated on:   2/08/2024
+Updated on:   25/11/2024
 Created by:   Stewart
 Filename:     Install-Printer-Driver.ps1
 
@@ -10,13 +10,13 @@ Simple PowerShell Script to install a printer drivervia Microsoft Intune. Requir
 ### Powershell Commands ###
 
 Install:
-powershell.exe -ExecutionPolicy Bypass -File .\\Install-Printer-Driver.ps1 -DriverName "KONICA MINOLTA Universal V4 PCL" -INFFile "KOBxxK__01.inf"
+powershell.exe -ExecutionPolicy Bypass -File .\\Install-Printer-Driver.ps1 -DriverName "KONICA MINOLTA Universal PCL" -INFFile "KOAWUJ__.inf"
 
 Detection:
 
 Rule Type:          Registry
 Key path:           HKLM:\SOFTWARE\IntuneDriversInstallation
-Value:              KOBxxK__01.inf
+Value:              KOAWUJ__.inf
 Detection method:   String comparison
 Operator:           Equals
 Name:               1
@@ -31,118 +31,103 @@ Param (
     [Parameter(Mandatory = $True)]
     [String]$DriverName,
     [Parameter(Mandatory = $True)]
-    [String]$INFFile
+    [String]$INFFile,
+    [Parameter(Mandatory = $False)]
+    [String]$LogDirectory = "$env:TEMP"
 )
 
-
-#Reset Error catching variable
+# Reset Error variable
 $Throwbad = $Null
 
-#Run script in 64bit PowerShell to enumerate correct path for pnputil
-If ($ENV:PROCESSOR_ARCHITEW6432 -eq "AMD64") {
-    Try {
-        &"$ENV:WINDIR\SysNative\WindowsPowershell\v1.0\PowerShell.exe" -File $PSCOMMANDPATH -DriverName $DriverName -INFFile $INFFile
-    }
-    Catch {
-        Write-Error "Failed to start $PSCOMMANDPATH"
-        Write-Warning "$($_.Exception.Message)"
-        $Throwbad = $True
-    }
-}
-
+# Function for logging
 function Write-LogEntry {
     param (
-        [parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
+        [Parameter(Mandatory = $true)]
         [string]$Value,
-        [parameter(Mandatory = $false)]
-        [ValidateNotNullOrEmpty()]
+        [Parameter(Mandatory = $false)]
         [string]$FileName = "$($DriverName).log",
         [switch]$Stamp
     )
 
-    #Build Log File appending System Date/Time to output
-    $LogFile = Join-Path -Path $env:SystemRoot -ChildPath $("Temp\$FileName")
-    $Time = -join @((Get-Date -Format "HH:mm:ss.fff"), " ", (Get-WmiObject -Class Win32_TimeZone | Select-Object -ExpandProperty Bias))
+    # Build log file path
+    $LogFile = Join-Path -Path $LogDirectory -ChildPath $FileName
+    $Time = (Get-Date -Format "HH:mm:ss.fff")
     $Date = (Get-Date -Format "MM-dd-yyyy")
+    $LogText = if ($Stamp) {
+        "<$Value> <time='$Time' date='$Date'>"
+    } else {
+        $Value
+    }
 
-    If ($Stamp) {
-        $LogText = "<$($Value)> <time=""$($Time)"" date=""$($Date)"">"
-    }
-    else {
-        $LogText = "$($Value)"   
-    }
-	
-    Try {
+    # Attempt to write to the log
+    try {
         Out-File -InputObject $LogText -Append -NoClobber -Encoding Default -FilePath $LogFile -ErrorAction Stop
-    }
-    Catch [System.Exception] {
-        Write-Warning -Message "Unable to add log entry to $LogFile.log file. Error message at line $($_.InvocationInfo.ScriptLineNumber): $($_.Exception.Message)"
+    } catch {
+        Write-Warning "Unable to log entry to $LogFile. Error: $($_.Exception.Message)"
     }
 }
 
+# Validate INF file
+if (-not (Test-Path -Path "$PSScriptRoot\$INFFile")) {
+    Write-Error "The INF file '$INFFile' does not exist in the script directory."
+    exit 1
+}
+
+# Validate registry permissions
+try {
+    $RegistryTest = Test-Path -Path HKLM:\SOFTWARE\IntuneDriversInstallation
+    if (-not $RegistryTest) {
+        New-Item -Path HKLM:\SOFTWARE -Name IntuneDriversInstallation -Force | Out-Null
+    }
+} catch {
+    Write-Error "Insufficient permissions to modify registry at HKLM:\SOFTWARE\IntuneDriversInstallation."
+    exit 1
+}
+
+# Log start
 Write-LogEntry -Value "##################################"
 Write-LogEntry -Stamp -Value "Installation started"
 Write-LogEntry -Value "##################################"
-Write-LogEntry -Value "Install Printer Driver using the following values..."
 Write-LogEntry -Value "Driver Name: $DriverName"
 Write-LogEntry -Value "INF File: $INFFile"
 
-$INFARGS = @(
-    "/add-driver"
-    "$psscriptroot\$INFFile"
-)
+# Set arguments for pnputil
+$INFARGS = @("/add-driver", "$PSScriptRoot\$INFFile")
 
-If (-not $ThrowBad) {
-
-    Try {
-
-        #Stage driver to driver store
-        Write-LogEntry -Stamp -Value "Staging Driver to Windows Driver Store using INF ""$($INFFile)"""
-        Write-LogEntry -Stamp -Value "Running command: Start-Process pnputil.exe -ArgumentList $($INFARGS) -wait -passthru"
-        Start-Process pnputil.exe -ArgumentList $INFARGS -wait -passthru
-
-    }
-    Catch {
-        Write-Warning "Error staging driver to Driver Store"
-        Write-Warning "$($_.Exception.Message)"
-        Write-LogEntry -Stamp -Value "Error staging driver to Driver Store"
-        Write-LogEntry -Stamp -Value "$($_.Exception)"
-        $ThrowBad = $True
-    }
+# Stage driver to Windows driver store
+try {
+    Write-LogEntry -Stamp -Value "Staging Driver to Windows Driver Store"
+    Start-Process pnputil.exe -ArgumentList $INFARGS -Wait -PassThru | Out-Null
+} catch {
+    Write-Error "Failed to stage driver to driver store."
+    Write-LogEntry -Stamp -Value "Error staging driver: $($_.Exception.Message)"
+    $Throwbad = $True
 }
 
-If (-not $ThrowBad) {
-    Try {
-    
-        #Install driver
+# Install driver if no errors
+if (-not $Throwbad) {
+    try {
         $DriverExist = Get-PrinterDriver -Name $DriverName -ErrorAction SilentlyContinue
         if (-not $DriverExist) {
-            Write-LogEntry -Stamp -Value "Adding Printer Driver ""$($DriverName)"""
+            Write-LogEntry -Stamp -Value "Installing Printer Driver: $DriverName"
             Add-PrinterDriver -Name $DriverName -Confirm:$false
-			# Sets a registry key that Intune can use to decide if a machine already has the drivers installed
-            if (Test-Path HKLM:\SOFTWARE\IntuneDriversInstallation) {
-            	New-ItemProperty -Path HKLM:\SOFTWARE\IntuneDriversInstallation -Name $INFFile -PropertyType DWORD -Value 1 -Force
-            	}
-            else  {
-            	New-Item -Path HKLM:\SOFTWARE -Name IntuneDriversInstallation -Force
-            	New-ItemProperty -Path HKLM:\SOFTWARE\IntuneDriversInstallation -Name $INFFile -PropertyType DWORD -Value 1 -Force
-            }
+            # Set Intune detection key
+            Set-ItemProperty -Path HKLM:\SOFTWARE\IntuneDriversInstallation -Name $INFFile -Value 1 -Force
+        } else {
+            Write-LogEntry -Stamp -Value "Printer Driver '$DriverName' already exists. Skipping installation."
         }
-        else {
-            Write-LogEntry -Stamp -Value "Print Driver ""$($DriverName)"" already exists. Skipping driver installation."
-        }
-    }
-    Catch {
-        Write-Warning "Error installing Printer Driver"
-        Write-Warning "$($_.Exception.Message)"
-        Write-LogEntry -Stamp -Value "Error installing Printer Driver"
-        Write-LogEntry -Stamp -Value "$($_.Exception)"
-        $ThrowBad = $True
+    } catch {
+        Write-Error "Error installing Printer Driver."
+        Write-LogEntry -Stamp -Value "Error installing driver: $($_.Exception.Message)"
+        $Throwbad = $True
     }
 }
 
-If ($ThrowBad) {
-    Write-Error "An error was thrown during installation. Installation failed. Refer to the log file in %temp% for details"
-    Write-LogEntry -Stamp -Value "Installation Failed"
+# Final cleanup and exit
+if ($Throwbad) {
+    Write-Error "Installation failed. Refer to the log file at $LogDirectory for details."
+    Write-LogEntry -Stamp -Value "Installation failed."
+    exit 1
+} else {
+    Write-LogEntry -Stamp -Value "Installation completed successfully."
 }
