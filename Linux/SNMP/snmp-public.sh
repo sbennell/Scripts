@@ -22,7 +22,7 @@ rocommunity public
 sysLocation $SYS_LOCATION
 sysContact $SYS_CONTACT
 
-# Allow access from localhost only
+# Bind SNMP to all interfaces (or customize)
 agentAddress udp:161,udp6:[::1]:161
 
 # Enable basic system monitoring
