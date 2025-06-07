@@ -1,3 +1,4 @@
+
 # SNMP Public Setup Script
 
 This script installs and configures SNMP (Simple Network Management Protocol) on **Debian/Ubuntu** systems using the **`public`** community string for basic monitoring.
