@@ -37,15 +37,15 @@ snmpwalk -v2c -c public localhost
 - By default, SNMP is configured to listen only on `localhost`.
 - To allow remote access, edit `/etc/snmp/snmpd.conf` and change:
 
-  ```text
-  agentAddress udp:161,udp6:[::1]:161
-  ```
+```bash
+agentAddress udp:161,udp6:[::1]:161
+```
 
-  to:
+to:
 
-  ```text
-  agentAddress udp:161
-  ```
+```bash
+agentAddress udp:161
+```
 
 - Open UDP port 161 in your firewall **only for trusted IPs**.
 
