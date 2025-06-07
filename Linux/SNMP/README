@@ -1,0 +1,67 @@
+# SNMP Public Setup Script
+
+This script installs and configures SNMP (Simple Network Management Protocol) on **Debian/Ubuntu** systems using the **`public`** community string for basic monitoring.
+
+## 📋 Features
+
+- Installs `snmp` and `snmpd`
+- Prompts for `sysLocation` and `sysContact`
+- Configures SNMP to allow read-only access with community string `public`
+- Limits SNMP access to localhost (default for security)
+- Automatically enables and restarts the SNMP service
+
+## 🚀 Quick Start
+
+Run the script directly from GitHub:
+
+```bash
+bash <(curl -s https://raw.githubusercontent.com/sbennell/Scripts/refs/heads/master/Linux/SNMP/snmp-public.sh)
+```
+
+Or using `wget`:
+
+```bash
+bash <(wget -qO- https://raw.githubusercontent.com/sbennell/Scripts/refs/heads/master/Linux/SNMP/snmp-public.sh)
+```
+
+## 🧪 Verify SNMP is working
+
+After installation, you can verify SNMP is responding locally:
+
+```bash
+snmpwalk -v2c -c public localhost
+```
+
+## 🔐 Security Notes
+
+- By default, SNMP is configured to listen only on `localhost`.
+- To allow remote access, edit `/etc/snmp/snmpd.conf` and change:
+
+  ```text
+  agentAddress udp:161,udp6:[::1]:161
+  ```
+
+  to:
+
+  ```text
+  agentAddress udp:161
+  ```
+
+- Open UDP port 161 in your firewall **only for trusted IPs**.
+
+## 📂 Backup
+
+The script creates a backup of the original SNMP config:
+
+```bash
+/etc/snmp/snmpd.conf.bak
+```
+
+## ✅ Tested On
+
+- Ubuntu 22.04
+- Debian 12
+
+## 📄 License
+
+MIT License
