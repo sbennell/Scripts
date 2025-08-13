@@ -3,8 +3,6 @@ Function UserExit(sType, sWhen, sDetail, bSkip)
     Dim strFile, strScriptFile
     Const Success = 0
 
-    strScriptFile = "" ' Initialize to empty string
-
     ' Create required objects
     Set shell = CreateObject("WScript.Shell")
     Set objFSO = CreateObject("Scripting.FileSystemObject")
@@ -20,10 +18,9 @@ Function UserExit(sType, sWhen, sDetail, bSkip)
         End If
     Next
 
-    ' If script not found, skip execution and return Success
+    ' Handle case where script was not found
     If strScriptFile = "" Then
-        UserExit = Success
-        Exit Function
+        WScript.Quit 1
     End If
 
     ' Build PowerShell command
