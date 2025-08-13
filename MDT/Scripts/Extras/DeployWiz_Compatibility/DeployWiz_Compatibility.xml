@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+
+' // ***************************************************************************
+' // 
+' // Copyright (c) Microsoft Corporation.  All rights reserved.
+' // 
+' // Microsoft Deployment Toolkit Solution Accelerator
+' //
+' // File:      DeployWiz_Definition_ENU.wsf
+' // 
+' // Version:   6.3.8456.1000
+' // 
+' // Purpose:   Main Client Deployment Wizard Defintion File
+' // 
+' // ***************************************************************************
+
+-->
+
+<Wizard>
+	<Global>
+		<CustomScript>\Extras\DeployWiz_Compatibility\DeployWiz_Compatibility.vbs</CustomScript>
+	</Global>
+
+	<Pane id="CompatibilityCheck" title="Check Compatibility">
+		<Body>
+	<![CDATA[
+		<H1>Windows 11 Compatibility Check</H1>
+		<H2>The CPU must support POPCNT and SSE4.2 as of v24H2. Without that support, the system will fail to boot.</H2>
+		<p>Please check the below to see if the current device can run Windows 11 24H2+.</p>
+
+		<span id=CompatibilityInfo24H2><p>Unknown</p></span>
+		
+		<p><i><b>NOTE:</b> The above checks are to be used as a guide <b>ONLY</b>, and do not ensure full compatibility nor guarantee support from either Microsoft or the Department.</i></p>
+	]]>
+		</Body>
+		<Initialization><![CDATA[InitializeCompatibilityInfo]]></Initialization>
+	</Pane>
+
+</Wizard>
