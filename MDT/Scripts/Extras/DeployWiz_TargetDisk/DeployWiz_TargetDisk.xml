@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+
+' // ***************************************************************************
+' //
+' // Copyright (c) Microsoft Corporation.  All rights reserved.
+' //
+' // Microsoft Deployment Toolkit Solution Accelerator
+' //
+' // File:      DeployWiz_Definition_ENU.wsf
+' //
+' // Version:   6.3.8456.1000
+' //
+' // Purpose:   Main Client Deployment Wizard Defintion File
+' //
+' // ***************************************************************************
+
+-->
+<Wizard>
+  <Global>
+    <CustomScript>\Extras\DeployWiz_TargetDisk\DeployWiz_TargetDisk.vbs</CustomScript>
+  </Global>
+  <Pane id="SelectTargetDIsk" title="Target Disk">
+    <Initialization><![CDATA[ Disk_Initialization ]]></Initialization>
+    <Body><![CDATA[
+
+			<!-- Use the H1 Style for titles at the top of the page -->
+			<H1>Specify the target disk for use in the deployment process.</H1>
+
+			<table>
+
+			<tr><td colspan=2>
+			<H4>Target Disk</H4>
+			</td></tr>
+
+			<tr valign=top>
+
+			<td width="80px">
+			<img src="Extras\DeployWiz_TargetDisk\SD_HDD.png" width="128" height="128">
+			</td>
+
+			<td width="100%">
+			<p>Select the target disk for deployment: </br>
+			<SELECT NAME="TargetDisk" class=WideEdit language="vbscript" onchange="SetTargetDisk" >
+			</SELECT>
+			</p>
+
+
+			<input type=hidden NAME="UserLocale" class=WideEdit />
+			<input type=hidden NAME="KeyboardLocale" class=WideEdit />
+
+			</td>
+			</tr>
+
+			<tr><td colspan=2>
+			<br>
+
+			</td></tr>
+
+			<tr valign=top>
+
+			</tr>
+			</table>
+		]]></Body>
+  </Pane>
+</Wizard>
