@@ -6,9 +6,10 @@
 # //
 # // File:      Export-Drivers.ps1
 # // 
-# // Version:   2025.08.13-4
+# // Version:   2025.08.13-5
 # // 
 # // Version History
+# // 2025.08.13-5: Modified to get computer name from Windows instead of OSDComputerName task sequence variable
 # // 2025.08.13-4: Complete rewrite to match UserExit-InstallWinPEDrivers.ps1 and Copy-Drivers.ps1 structure
 # // 2024.10.4-3: Previous version with basic functionality
 # // 2024.10.4-2: Improved error handling, fixed variable names, and added zip functionality
@@ -20,6 +21,39 @@
 # // 
 # // ***
 
+# Function to get computer name from Windows
+function Get-WindowsComputerName {
+    try {
+        # Try multiple methods to get computer name
+        $computerName = $env:COMPUTERNAME
+        
+        if (-not $computerName -or $computerName.Trim() -eq "") {
+            # Fallback method using .NET
+            $computerName = [System.Environment]::MachineName
+        }
+        
+        if (-not $computerName -or $computerName.Trim() -eq "") {
+            # Second fallback using WMI
+            $computerSystem = Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction SilentlyContinue
+            if ($computerSystem) {
+                $computerName = $computerSystem.Name
+            }
+        }
+        
+        if (-not $computerName -or $computerName.Trim() -eq "") {
+            # Final fallback - use a default name with timestamp
+            $computerName = "UNKNOWN-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+            Write-Warning "Could not determine computer name, using fallback: $computerName"
+        }
+        
+        return $computerName.Trim().ToUpper()
+        
+    } catch {
+        Write-Warning "Error getting computer name: $_"
+        return "UNKNOWN-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+    }
+}
+
 # Initialize Task Sequence Environment
 try {
     Write-Host "Initializing task sequence environment..."
@@ -29,16 +63,14 @@ try {
     
     # Get required variables from task sequence
     $DeployShare = $TSEnv.Value("DeployRoot")
-    $OSDComputerName = $TSEnv.Value("OSDComputerName")
+    
+    # Get computer name from Windows instead of task sequence
+    $OSDComputerName = Get-WindowsComputerName
+    Write-Host "Computer name from Windows: $OSDComputerName"
     
     # Validate that DeployShare is available
     if (-not $DeployShare -or $DeployShare.Trim() -eq "") {
         throw "DeployRoot not available from task sequence or is empty"
-    }
-    
-    # Validate that OSDComputerName is available
-    if (-not $OSDComputerName -or $OSDComputerName.Trim() -eq "") {
-        throw "OSDComputerName not available from task sequence or is empty"
     }
     
     # Validate that DeployShare path exists and is accessible
@@ -95,7 +127,7 @@ try {
     Write-Host "Time: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor Red
     Write-Host "Script: $($MyInvocation.MyCommand.Name)" -ForegroundColor Red
     Write-Host "========================================" -ForegroundColor Red
-    
+    Start-Sleep 30
     exit 1
 }
 
@@ -518,7 +550,7 @@ function Test-ExportedDrivers {
 
 # Main execution logic
 Write-Log "=== Export-Drivers.ps1 Script Started ===" "INFO"
-Write-Log "Script Version: 2025.08.13-12 (Updated to match other scripts)" "INFO"
+Write-Log "Script Version: 2025.08.13-5 (Updated to get computer name from Windows)" "INFO"
 
 # Get computer information
 $computerInfo = Get-ComputerInfo
