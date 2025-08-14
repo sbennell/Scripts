@@ -115,7 +115,6 @@ Function ValidateTSList
 	' Set the related properties
 
 	oUtility.SetTaskSequenceProperties oEnvironment.Item("TaskSequenceID")
-	oEnvironment.Item("_SMSTSPackageName") = "School SOE 24H2 (v2) - " & oEnvironment.Item("TaskSequenceName")
 
 	If oEnvironment.Item("OSGUID") <> "" and oEnvironment.Item("ImageProcessor") = "" then
 		' There was an OSGUID defined within the TS.xml file, however the GUID was not found 
