@@ -1,192 +1,292 @@
+
 # LockScreenInfo Deployment Guide
 
 ## Overview
-LockScreenInfo generates custom Windows lock screen backgrounds with system information overlay using PowerShell and HTML templates.
 
-## Features
-- 4 positioning templates (corners of screen)
-- Dynamic font scaling based on screen resolution  
-- Customizable organization name and contact information
-- Weekly scheduled updates + startup refresh
-- Comprehensive logging system
-- Multi-tenant support with parameterized deployment
+**LockScreenInfo** is a PowerShell-based solution that updates Windows lock screens with system information, organizational branding, and contact info.  
+This guide covers:
 
-## Intune Deployment Steps
+1.  Folder structure and files
+    
+2.  Installation
+    
+3.  Detection
+    
+4.  Uninstallation
+    
+5.  Scheduled task behavior
+    
+6.  Logging
+    
+7.  Intune deployment recommendations
+    
+8.  Installation examples
+    
 
-### 1. Package Preparation
-Create a folder with these files:
-```
-DeploymentPackage/
-├── LockScreenInfo.ps1          
-├── format_bottom_left.html     
-├── format_Bottom_Right.html    
-├── format_top_left.html        
-├── format_top_right.html       
-├── wkhtmltoimage.exe           
-├── wkhtmltox.dll               
-├── libwkhtmltox.a              
-├── LICENSE                     
-├── readme.md                   
-├── wallpaper.jpg               
-├── install.ps1                 
-├── uninstall.ps1               
-└── detect.ps1                  
-```
+----------
 
-### 2. Create .intunewin Package
-```bash
-# Use Microsoft Win32 Content Prep Tool
-.\IntuneWinAppUtil.exe -c "C:\DeploymentPackage" -s "install.ps1" -o "C:\Output"
-```
+## 1. Folder Structure
 
-### 3. Intune Configuration
+Folder
 
-**App Information:**
-- Name: LockScreenInfo System Information
-- Description: Displays system information on Windows lock screen
-- Publisher: Stewart Bennell
+Purpose
 
-**Program:**
-- Install command: See examples below
-- Uninstall command: `powershell.exe -ExecutionPolicy Bypass -File uninstall.ps1`
-- Install behavior: System
-- Device restart behavior: No specific action
+`C:\Windows\OEMFiles\Script\LockScreenInfo`
 
-**Requirements:**
-- OS: Windows 10 1607+ / Windows 11
-- Architecture: x64
-- PowerShell 5.1+
+Main script and resources
 
-**Detection Rules:**
-- Use custom detection script
-- Upload: detect.ps1
-- Run as 32-bit: No
+`C:\Windows\OEMFiles\Wallpaper`
 
-### 4. Install Command Examples
+Background wallpaper images
+
+`C:\Windows\OEMFiles\LockScreen`
+
+Generated lock screen images
+
+`C:\Windows\OEMFiles\logs`
+
+Installation/uninstallation logs
+
+> **Note:** All folders are automatically created by the install/uninstall scripts if they do not exist.
+
+----------
+
+## 2. Installation Script (`Install-LockScreenInfo.ps1`)
+
+### Features
+
+-   Copies files from source (`.\Files`) to `$Destination`
+    
+-   Creates necessary folder structure
+    
+-   Adds registry key for Intune detection (`HKLM:\Software\SOE\LockScreenInfo`)
+    
+-   Creates a scheduled task to update the lock screen:
+    
+    -   At user logon
+        
+    -   Weekly on Monday at 9:00 AM
+        
+-   Runs **initial lock screen generation** immediately after installation
+    
+-   Logs actions to `C:\Windows\OEMFiles\logs\LockScreenInfo_Install.log`
+    
+-   Supports parameters:
+    
+    -   `ContactInfo`
+        
+    -   `Organization`
+        
+    -   `HideOrganization` / `HideContact`
+        
+    -   `HTMLPath`
+        
+    -   `BackgroundImage`
+        
+    -   `TargetImage`
+        
+    -   `FontSizeMultiplier`
+        
+
+### Example Installation Command
+
+``.\Install-LockScreenInfo.ps1 `
+    -ContactInfo "For support, call IT" `
+    -Organization "Contoso Corp" `
+    -HTMLPath "format_bottom_right.html" `
+    -BackgroundImage "C:\Windows\OEMFiles\Wallpaper\wallpaper.jpg"`` 
+
+----------
+
+## 3. Detection Script (`Detect-LockScreenInfo.ps1`)
+
+### Purpose
+
+-   Used by Intune to verify if `LockScreenInfo` is installed
+    
+-   Checks:
+    
+    -   Registry key `HKLM:\Software\SOE\LockScreenInfo`
+        
+    -   Installation folder `C:\Windows\OEMFiles\Script\LockScreenInfo`
+        
+    -   Installed version ≥ minimum required (`1.2.0` by default)
+        
+
+### Exit Codes
+
+Exit Code
+
+Meaning
+
+0
+
+Installed and version meets minimum requirement
+
+1
+
+Not installed or version too low
+
+----------
+
+## 4. Uninstallation Script (`Uninstall-LockScreenInfo.ps1`)
+
+### Features
+
+-   Removes scheduled task `LockScreenInfo`
+    
+-   Removes installed files in `C:\Windows\OEMFiles\Script\LockScreenInfo`
+    
+-   Removes registry key `HKLM:\Software\SOE\LockScreenInfo`
+    
+-   Logs actions to `C:\Windows\OEMFiles\logs\LockScreenInfo_Uninstall.log`
+    
+
+### Example Uninstall Command
+
+`.\Uninstall-LockScreenInfo.ps1` 
+
+----------
+
+## 5. Scheduled Task Details
+
+Property
+
+Value
+
+Task Name
+
+LockScreenInfo
+
+User
+
+SYSTEM
+
+Run Level
+
+Highest privileges
+
+Triggers
+
+At logon, Weekly Monday 09:00 AM
+
+Action
+
+Runs `powershell.exe` with install parameters
+
+> **Note:** The scheduled task ensures lock screen updates continue automatically after the initial deployment.
+
+----------
+
+## 6. Logging
+
+Script
+
+Log File Location
+
+Install
+
+`C:\Windows\OEMFiles\logs\LockScreenInfo_Install.log`
+
+Uninstall
+
+`C:\Windows\OEMFiles\logs\LockScreenInfo_Uninstall.log`
+
+**Logging includes:**
+
+-   Folder creation
+    
+-   File copy status
+    
+-   Registry updates
+    
+-   Scheduled task creation/removal
+    
+-   Initial lock screen generation status
+    
+
+----------
+
+## 7. Intune Deployment Recommendations
+
+1.  **Package Files:** Include:
+    
+    -   `Install-LockScreenInfo.ps1`
+        
+    -   `Files\` folder containing all LockScreenInfo resources
+        
+    -   Optionally: `Uninstall-LockScreenInfo.ps1` for Intune uninstall
+        
+2.  **Intune Win32 App Setup:**
+    
+    -   **Install command:**
+        
+        `powershell.exe -ExecutionPolicy Bypass -File Install-LockScreenInfo.ps1` 
+        
+    -   **Uninstall command:**
+        
+        `powershell.exe -ExecutionPolicy Bypass -File Uninstall-LockScreenInfo.ps1` 
+        
+    -   **Detection rule:** Use `Detect-LockScreenInfo.ps1` as a **custom detection script**
+        
+    -   **Return codes:** 0 = installed, 1 = not installed
+        
+3.  **Deployment:** Target device groups where the lock screen should be applied.
+    
+
+----------
+
+## 8. Installation Command Examples
 
 **Mother Teresa Catholic College:**
-```powershell
-powershell.exe -ExecutionPolicy Bypass -File install.ps1 -HideOrganization -ContactInfo "For help, email: itsupport@motherteresa.catholic.edu.au" -HTMLPath "format_Bottom_Right.html" -BackgroundImage "c:\windows\OEMFiles\Wallpaper\wallpaper.jpg"
-```
 
-**Westmeadows PS:**
-```powershell
-powershell.exe -ExecutionPolicy Bypass -File install.ps1 -Organization "Westmeadows Primary School" -ContactInfo "For help, helpdesk.westmeadows.vic.edu.au" -HTMLPath "format_top_left.html" -BackgroundImage "c:\windows\OEMFiles\Wallpaper\wallpaper.jpg"
-```
+``powershell.exe -ExecutionPolicy Bypass -File install.ps1 `
+    -HideOrganization `
+    -ContactInfo "For help, email: itsupport@motherteresa.catholic.edu.au" `
+    -HTMLPath "format_Bottom_Right.html" `
+    -BackgroundImage "C:\Windows\OEMFiles\Wallpaper\wallpaper.jpg"`` 
 
-**High Security (Minimal Info):**
-```powershell
-powershell.exe -ExecutionPolicy Bypass -File install.ps1 -HideOrganization -HideContact -HTMLPath "format_top_right.html" -BackgroundImage "c:\windows\OEMFiles\Wallpaper\wallpaper.jpg"
-```
+**Westmeadows Primary School:**
 
-**Healthcare with Large Text:**
-```powershell
-powershell.exe -ExecutionPolicy Bypass -File install.ps1 -Organization "St. Mary's Hospital" -ContactInfo "IT Support: ext.2480 (24/7)" -HTMLPath "format_bottom_left.html" -FontSizeMultiplier 1.3 -BackgroundImage "c:\windows\OEMFiles\Wallpaper\wallpaper.jpg"
-```
+``powershell.exe -ExecutionPolicy Bypass -File install.ps1 `
+    -Organization "Westmeadows Primary School" `
+    -ContactInfo "For help, helpdesk.westmeadows.vic.edu.au" `
+    -HTMLPath "format_top_left.html" `
+    -BackgroundImage "C:\Windows\OEMFiles\Wallpaper\wallpaper.jpg"`` 
 
-## Parameter Reference
+**St Joseph the Worker Primary School:**
 
-| Parameter | Type | Purpose | Example |
-|-----------|------|---------|---------|
-| `-Organization` | String | Company name to display | `"ABC Corp"` |
-| `-HideOrganization` | Switch | Hide company name completely | |
-| `-ContactInfo` | String | IT contact information | `"Help: x1234"` |
-| `-HideContact` | Switch | Hide contact information | |
-| `-HTMLPath` | String | Template file to use | `"format_top_left.html"` |
-| `-BackgroundImage` | String | Background image path\filename | `"C:\Windows\OEMFiles\lockscreen\lockscreen.jpg"` |
-| `-FontSizeMultiplier` | Double | Text size scaling (0.5-2.0) | `1.2` |
-| `-CustomParameters` | String | Additional script parameters | `"-ExtraParam value"` |
+``powershell.exe -ExecutionPolicy Bypass -File install.ps1 `
+    -HideOrganization `
+    -ContactInfo "For help, email: itsupport@sjwreservoirnth.catholic.edu.au" `
+    -HTMLPath "format_top_left.html" `
+    -BackgroundImage "C:\Windows\OEMFiles\Wallpaper\wallpaper.jpg"`` 
 
-## Template Options
+**Morang South Primary School:**
 
-| Template | Position | Best For |
-|----------|----------|----------|
-| `format_bottom_left.html` | Bottom Left | Standard corporate |
-| `format_Bottom_Right.html` | Bottom Right | Default recommended |
-| `format_top_left.html` | Top Left | High visibility |
-| `format_top_right.html` | Top Right | Minimal interference |
+``powershell.exe -ExecutionPolicy Bypass -File install.ps1 `
+    -Organization "Morang South Primary School" `
+    -ContactInfo "For help, helpdesk.westmeadows.vic.edu.au" `
+    -HTMLPath "format_top_left.html" `
+    -BackgroundImage "C:\Windows\OEMFiles\Wallpaper\wallpaper.jpg"`` 
 
-## Scheduled Task Details
+----------
 
-**Default Schedule:**
-- At system startup (immediate system info refresh)
-- Weekly on Monday at 9:00 AM (regular updates)
+### Tips:
 
-**Runs as:** SYSTEM account with highest privileges
-**Battery:** Allowed to run on battery power
-**Network:** Does not require network connection
+-   Use `-HideOrganization` **if you don’t want the organization name displayed** on the lock screen.
+    
+-   `-ContactInfo` should be customized for each site’s IT support email or phone.
+    
+-   `-HTMLPath` determines the position/layout of the information on the lock screen.
+    
+-   `-BackgroundImage` can point to a site-specific wallpaper if required.
+    
 
-## Post-Deployment Management
+----------
 
-After deployment, you can use these management scripts:
+### ✅ Notes for IT Teams
 
-**Change Template Position:**
-```powershell
-.\TemplateConfig.ps1 -Template "top_left" -RunNow
-```
-
-**Modify Schedule:**
-```powershell
-# Change to bi-weekly
-.\ScheduleConfig.ps1 -Frequency BiWeekly -DayOfWeek Wednesday -Time "14:00"
-
-# Daily updates
-.\ScheduleConfig.ps1 -Frequency Daily -Time "08:00"
-```
-
-**View Logs:**
-```powershell
-# Recent activity
-.\LogManager.ps1 -Action View
-
-# All logs summary  
-.\LogManager.ps1 -Action Summary
-
-# Archive old logs
-.\LogManager.ps1 -Action Archive
-```
-
-## Troubleshooting
-
-**Check Installation:**
-```powershell
-# Verify files exist
-Test-Path "C:\Windows\OEMFiles\Scripts\LockScreenInfo.ps1"
-
-# Check scheduled task
-Get-ScheduledTask -TaskName "LockScreenInfo"
-
-# View recent logs
-Get-Content "C:\Windows\OEMFiles\logs\LockScreenInfo.log" -Tail 20
-```
-
-**Manual Execution:**
-```powershell
-# Test the script manually
-cd "C:\Windows\OEMFiles\Scripts"
-.\LockScreenInfo.ps1 -ContactInfo "Test" -HTMLPath "format_Bottom_Right.html"
-```
-
-**Common Issues:**
-1. **wkhtmltoimage.exe not found** - Ensure all files are copied during installation
-2. **Permission denied** - Script must run as Administrator/SYSTEM
-3. **HTML template not found** - Check HTMLPath parameter matches actual filename
-4. **Background image missing** - Verify BackgroundImage exists in package
-
-## File Locations
-
-- **Scripts:** `C:\Windows\OEMFiles\Scripts\`
-- **Logs:** `C:\Windows\OEMFiles\logs\`
-- **Background:** `C:\Windows\OEMFiles\Wallpaper\`
-- **Generated Image:** `C:\Windows\OEMFiles\lockscreen\lockscreen.jpg`
-
-## Multi-Organization Deployment
-
-For multiple organizations:
-1. Create separate Win32 apps for each organization
-2. Include organization-specific background images
-3. Use different install command parameters
-4. Target appropriate device groups
-5. Name apps descriptively (e.g., "LockScreenInfo - Company A")
-
-This allows centralized management while supporting different branding and contact information per organization.
+-   Update `$ScriptVersion` in `Install-LockScreenInfo.ps1` for new releases.
+    
+-   Update `$RequiredVersion` in `Detect-LockScreenInfo.ps1` accordingly.

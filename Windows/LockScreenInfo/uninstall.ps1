@@ -1,50 +1,53 @@
 #Requires -RunAsAdministrator
+<#
+.SYNOPSIS
+    Uninstalls LockScreenInfo: removes scheduled task, files, registry key, and logs actions.
+#>
 
-# Uninstall script for LockScreenInfo deployment
-$ErrorActionPreference = "Continue"
-$LogPath = "C:\Windows\OEMFiles\logs\LockScreenInfo_Uninstall.log"
+# --- Variables ---
+$Destination = "C:\Windows\OEMFiles\Script\LockScreenInfo"
+$RegPath     = "HKLM:\Software\SOE\LockScreenInfo"
+$TaskName    = "LockScreenInfo"
+$LogFolder   = "C:\Windows\OEMFiles\logs"
+$LogFile     = Join-Path $LogFolder "LockScreenInfo_Uninstall.log"
 
+# --- Logging helper ---
 function Write-Log {
     param([string]$Message)
-    $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    "$Timestamp - $Message" | Out-File -FilePath $LogPath -Append
-    Write-Host $Message
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $fullMessage = "$timestamp - $Message"
+    Write-Host $fullMessage -ForegroundColor Yellow
+
+    if (-not (Test-Path $LogFolder)) {
+        New-Item -Path $LogFolder -ItemType Directory -Force | Out-Null
+    }
+    Add-Content -Path $LogFile -Value $fullMessage
 }
 
-try {
-    Write-Log "Starting LockScreenInfo uninstallation..."
-    
-    # Remove scheduled task
-    $TaskName = "LockScreenInfo"
-    if (Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue) {
-        Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false
-        Write-Log "Removed scheduled task: $TaskName"
-    } else {
-        Write-Log "Scheduled task $TaskName not found"
-    }
-    
-    # Remove OEMFiles directory (optional - you might want to keep wallpapers)
-    $OEMPath = "C:\Windows\OEMFiles"
-    if (Test-Path $OEMPath) {
-        # Remove only our specific files/folders, but preserve logs for troubleshooting
-        $PathsToRemove = @(
-            "$OEMPath\Scripts\LockScreenInfo",
-        )
-        
-        foreach ($path in $PathsToRemove) {
-            if (Test-Path $path) {
-                Remove-Item -Path $path -Recurse -Force -ErrorAction Continue
-                Write-Log "Removed: $path"
-            }
-        }
-        
-        Write-Log "Note: Logs preserved in $OEMPath\logs for troubleshooting"
-    }
-    
-    Write-Log "LockScreenInfo uninstallation completed"
-    exit 0
-    
-} catch {
-    Write-Log "Uninstallation error: $($_.Exception.Message)"
-    exit 1
+Write-Log "Starting LockScreenInfo uninstall process..."
+
+# --- Remove Scheduled Task ---
+if (Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue) {
+    Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false
+    Write-Log "Removed scheduled task: $TaskName"
+} else {
+    Write-Log "Scheduled task not found: $TaskName"
 }
+
+# --- Remove Installed Files ---
+if (Test-Path $Destination) {
+    Remove-Item -Path $Destination -Recurse -Force
+    Write-Log "Removed folder and files: $Destination"
+} else {
+    Write-Log "Destination folder not found: $Destination"
+}
+
+# --- Remove Registry Key ---
+if (Test-Path $RegPath) {
+    Remove-Item -Path $RegPath -Recurse -Force
+    Write-Log "Removed registry key: $RegPath"
+} else {
+    Write-Log "Registry key not found: $RegPath"
+}
+
+Write-Log "LockScreenInfo uninstall process complete."

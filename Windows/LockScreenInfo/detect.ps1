@@ -1,35 +1,36 @@
-# Detection script for LockScreenInfo deployment
-# Save as: detect.ps1
+#Requires -RunAsAdministrator
+<#
+.SYNOPSIS
+    Detection script for Intune to check if LockScreenInfo is installed.
+    Detects any version >= $RequiredVersion.
+#>
 
-$RequiredFiles = @(
-    "C:\Windows\OEMFiles\Scripts\LockScreenInfo.ps1",
-    "C:\Windows\OEMFiles\Scripts\format_bottom_left.html",
-    "C:\Windows\OEMFiles\Scripts\format_Bottom_Right.html",
-    "C:\Windows\OEMFiles\Scripts\format_top_left.html",
-    "C:\Windows\OEMFiles\Scripts\format_top_right.html",
-    "C:\Windows\OEMFiles\Scripts\wkhtmltoimage.exe",
-    "C:\Windows\OEMFiles\Scripts\wkhtmltox.dll",
-    "C:\Windows\OEMFiles\Scripts\libwkhtmltox.a"
-		
-)
+$Destination      = "C:\Windows\OEMFiles\Script\LockScreenInfo"
+$RegPath          = "HKLM:\Software\SOE\LockScreenInfo"
+$RegName          = "Version"
+$RequiredVersion  = [version]"1.2.0"  # Minimum required version
 
-$TaskName = "LockScreenInfo"
-
-# Check if all required files exist
-$FilesExist = $true
-foreach ($file in $RequiredFiles) {
-    if (!(Test-Path $file)) {
-        $FilesExist = $false
-        break
+# --- Check Registry ---
+$RegInstalled = $false
+if (Test-Path $RegPath) {
+    try {
+        $InstalledVersion = [version](Get-ItemProperty -Path $RegPath -Name $RegName -ErrorAction Stop).$RegName
+        if ($InstalledVersion -ge $RequiredVersion) {
+            $RegInstalled = $true
+        }
+    } catch {
+        $RegInstalled = $false
     }
 }
 
-# Check if scheduled task exists
-$TaskExists = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+# --- Check Folder ---
+$FolderExists = Test-Path $Destination
 
-if ($FilesExist -and $TaskExists) {
-    Write-Host "LockScreenInfo is installed"
-    exit 0
+# --- Detection Result ---
+if ($RegInstalled -and $FolderExists) {
+    Write-Output "Installed (Version $InstalledVersion)"
+    exit 0  # Success: installed
 } else {
-    exit 1
+    Write-Output "Not Installed or Version too low"
+    exit 1  # Failure: not installed
 }
