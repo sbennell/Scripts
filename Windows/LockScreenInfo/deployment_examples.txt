@@ -1,0 +1,90 @@
+# ========================================
+# Deployment Examples for Different Organizations
+# ========================================
+
+# Example 1: Mother Teresa Catholic College (Original)
+# Command for Intune Win32 App install command:
+powershell.exe -ExecutionPolicy Bypass -File install.ps1 -HideOrganization -ContactInfo "For help, email: itsupport@motherteresa.catholic.edu.au" -HTMLPath "format_Bottom_Right.html" -BackgroundImageFile "wallpaper.jpg"
+
+# Example 2: Corporate Environment with Company Branding
+powershell.exe -ExecutionPolicy Bypass -File install.ps1 -Organization "Contoso Corporation" -ContactInfo "IT Help Desk: 1300-HELP-IT" -HTMLPath "format_top_left.html" -BackgroundImageFile "corporate_wallpaper.jpg"
+
+# Example 3: Hospital/Healthcare with 24/7 Support
+powershell.exe -ExecutionPolicy Bypass -File install.ps1 -Organization "St. Mary's Hospital" -ContactInfo "IT Support: ext.2480 (24/7)" -HTMLPath "format_bottom_left.html" -FontSizeMultiplier 1.2 -BackgroundImageFile "hospital_bg.jpg"
+
+# Example 4: Government Department (High Security)
+powershell.exe -ExecutionPolicy Bypass -File install.ps1 -HideOrganization -HideContact -HTMLPath "format_top_right.html" -BackgroundImageFile "secure_wallpaper.jpg"
+
+# Example 5: University/Education Sector
+powershell.exe -ExecutionPolicy Bypass -File install.ps1 -Organization "University of Technology" -ContactInfo "Student IT Support: help@uni.edu | Staff: x1234" -HTMLPath "format_bottom_right.html" -FontSizeMultiplier 0.9
+
+# Example 6: Small Business with Custom Parameters
+powershell.exe -ExecutionPolicy Bypass -File install.ps1 -Organization "ABC Consulting" -ContactInfo "IT: john@abc.com.au" -HTMLPath "format_bottom_left.html" -CustomParameters '-AdditionalParameter "value"'
+
+# Example 7: Multi-Campus School
+powershell.exe -ExecutionPolicy Bypass -File install.ps1 -Organization "Regional Education Network" -ContactInfo "Campus IT: x2000 | Central IT: x1000" -HTMLPath "format_top_left.html" -BackgroundImageFile "school_wallpaper.jpg"
+
+# ========================================
+# Configuration Matrix
+# ========================================
+
+<#
+Parameter Options:
+
+-Organization "Your Org Name"
+    - Shows organization name on lock screen
+    - Use quotes for names with spaces
+
+-HideOrganization
+    - Completely hides organization name
+    - Good for security-sensitive environments
+
+-ContactInfo "Contact details"
+    - Displays contact information
+    - Can include multiple contact methods
+    - Use quotes for complex contact info
+
+-HideContact  
+    - Hides all contact information
+    - Maximum security/privacy
+
+-HTMLPath
+    - "format_bottom_left.html"     (bottom left corner)
+    - "format_Bottom_Right.html"    (bottom right corner) 
+    - "format_top_left.html"        (top left corner)
+    - "format_top_right.html"       (top right corner)
+
+-BackgroundImageFile "filename.jpg"
+    - Name of background image file to use
+    - File must be included in deployment package
+    - Will be copied to C:\Windows\OEMFiles\Wallpaper\
+
+-FontSizeMultiplier 1.0
+    - 0.8 = Smaller text (high resolution displays)
+    - 1.0 = Default size
+    - 1.2 = Larger text (accessibility/older users)
+    - 1.5 = Very large text
+
+-CustomParameters "additional params"
+    - For any extra parameters you want to pass
+    - Must be properly quoted and escaped
+#>
+
+# ========================================
+# Intune App Configuration
+# ========================================
+
+<#
+For each organization, create separate Win32 apps with:
+
+1. Different install commands (examples above)
+2. Different background images in the package
+3. Targeted to specific device groups
+4. Named appropriately (e.g., "LockScreenInfo - Mother Teresa", "LockScreenInfo - Contoso")
+
+This allows you to:
+- Deploy different configurations to different organizations
+- Use organization-specific branding and contact details
+- Maintain separate deployment packages
+- Target specific device groups per organization
+#>
