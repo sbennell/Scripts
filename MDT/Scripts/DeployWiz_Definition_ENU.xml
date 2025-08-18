@@ -35,12 +35,16 @@
 	</Pane>
 	
 	
-	<Pane id="CheckCompatibility" reference="Extras\DeployWiz_Compatibility\DeployWiz_Compatibility.xml">
+	<Pane id="CheckCompatibility" reference="DeployWiz_Compatibility.xml">
+		<Condition><![CDATA[UCase(Property("DeploymentType")) = "NEWCOMPUTER"]]></Condition>
 	</Pane>
+
 	
 	
-	<Pane id="SelectDiskDrive" reference="Extras\DeployWiz_TargetDisk\DeployWiz_TargetDisk.xml">
+	<Pane id="SelectDiskDrive" reference="DeployWiz_TargetDisk.xml">
+		<Condition><![CDATA[UCase(Property("DeploymentType")) = "NEWCOMPUTER"]]></Condition>
 	</Pane>
+
 
 
 	<Pane id="ComputerName" reference="DeployWiz_ComputerName.xml">

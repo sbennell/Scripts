@@ -1,6 +1,6 @@
 # Export-Drivers.ps1
 
-**Version: 2025.08.13-5**  
+**Version: 2025.08.13-4**  
 **Copyright (c) Stewart Bennell. All rights reserved.**
 
 A PowerShell script for exporting and organizing system drivers from a reference computer into the Microsoft Deployment Toolkit (MDT) drivers folder structure.

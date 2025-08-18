@@ -18,9 +18,10 @@
 -->
 <Wizard>
   <Global>
-    <CustomScript>\Extras\DeployWiz_TargetDisk\DeployWiz_TargetDisk.vbs</CustomScript>
+    <CustomScript>DeployWiz_TargetDisk.vbs</CustomScript>
   </Global>
   <Pane id="SelectTargetDIsk" title="Target Disk">
+	<Condition><![CDATA[UCASE(Property("SkipTargetDisk"))<>"YES" ]]></Condition>
     <Initialization><![CDATA[ Disk_Initialization ]]></Initialization>
     <Body><![CDATA[
 
@@ -36,7 +37,7 @@
 			<tr valign=top>
 
 			<td width="80px">
-			<img src="Extras\DeployWiz_TargetDisk\SD_HDD.png" width="128" height="128">
+			<img src="SD_HDD.png" width="128" height="128">
 			</td>
 
 			<td width="100%">

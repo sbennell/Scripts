@@ -14,7 +14,7 @@ Function CheckCompatibility()
 	
 	For Each drive in objFSO.Drives
 		If drive.IsReady then
-			strFile = drive.DriveLetter & ":\Deploy\Scripts\Extras\DeployWiz_Compatibility\Test-Windows1124H2Compatibility.ps1"
+			strFile = drive.DriveLetter & ":\Deploy\Scripts\Test-Windows1124H2Compatibility.ps1"
 		
 			If objFSO.FileExists(strFile) Then
 				strScriptFile = strFile

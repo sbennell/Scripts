@@ -9,7 +9,7 @@
 # // Version:   2025.08.07-11 (Fixed DISM Commands)
 # // 
 # // Version History
-# // 2025.8.7-10: Initial version of PowerShell version 2
+# // 2025.8.7-10: Initial version of PowerShell version
 
 # // 
 # // Purpose: Installs drivers from "Drivers\" and copies appropriate drivers to the OS drive during Windows PE deployment. 
@@ -27,6 +27,7 @@ try {
     $DeployShare = $TSEnv.Value("DeployRoot")
     $OSDComputerName = $TSEnv.Value("OSDComputerName")
     $OSDriveLetter = $TSEnv.Value("OSDisk")
+    $OS = $TSEnv.Value("OS")
     
     # Validate that DeployShare is available
     if (-not $DeployShare -or $DeployShare.Trim() -eq "") {
@@ -39,7 +40,7 @@ try {
     }
 
     # Validate that OSDisk is available
-    if (-not $OSDisk -or $OSDisk.Trim() -eq "") {
+    if (-not $OSDriveLetter -or $OSDriveLetter.Trim() -eq "") {
         throw "OSDisk not available from task sequence or is empty"
     }
     
@@ -97,7 +98,7 @@ try {
     Write-Host "Time: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor Red
     Write-Host "Script: $($MyInvocation.MyCommand.Name)" -ForegroundColor Red
     Write-Host "========================================" -ForegroundColor Red
-    
+    Start-Sleep
     exit 1
 }
 # Create timestamped log file
@@ -488,7 +489,7 @@ $driverInfo = Get-DriverPath -Make $computerInfo.Make -Model $computerInfo.Model
 
 if (-not $driverInfo.Found) {
     Write-Log "No drivers found for this system. Exiting." "ERROR"
-    exit 1
+    exit 0
 }
 
 # Log driver information
