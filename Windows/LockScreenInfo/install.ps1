@@ -52,12 +52,13 @@ try {
     Write-Log "  CustomParameters: $CustomParameters"
     
     # Create directory structure
+    $OEMdir = "C:\Windows\OEMFiles"
     $Scriptsdir = "C:\Windows\OEMFiles\Scripts"
     $LockScreenInfo_dir = "C:\Windows\OEMFiles\Scripts\LockScreenInfo"
     $LockscreenDir = "C:\Windows\OEMFiles\lockscreen"
     $LogsDir = "C:\Windows\OEMFiles\logs"
     
-    @($Scriptsdir, $LockScreenInfo_dir, $LockscreenDir, $LogsDir) | ForEach-Object {
+    @($OEMdir, $Scriptsdir, $LockScreenInfo_dir, $LockscreenDir, $LogsDir) | ForEach-Object {
         if (!(Test-Path $_)) {
             New-Item -ItemType Directory -Path $_ -Force | Out-Null
             Write-Log "Created directory: $_"
