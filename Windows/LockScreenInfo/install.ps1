@@ -177,7 +177,13 @@ foreach ($file in $SourceFiles) {
     if (!(Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue)) {
         throw "Scheduled task creation failed"
     }
-    
+
+    # Add registry key for Intune detection
+    Write-Log "Adding registry key for Intune detection..."
+    New-Item -Path "HKLM:\Software\SOE\Intune" -Force | Out-Null
+    New-ItemProperty -Path "HKLM:\Software\SOE\lockscreeninfo" -Name "Version" -Value "1.2.0" -PropertyType String -Force | Out-Null
+
+
     Write-Log "LockScreenInfo installation completed successfully"
     exit 0
     
