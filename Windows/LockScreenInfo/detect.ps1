@@ -8,7 +8,7 @@
 $Destination      = "C:\Windows\OEMFiles\Script\LockScreenInfo"
 $RegPath          = "HKLM:\Software\SOE\LockScreenInfo"
 $RegName          = "Version"
-$RequiredVersion  = [version]"1.2.0"  # Minimum required version
+$RequiredVersion  = [version]"1.3.1"  # Minimum required version
 
 # --- Check Registry ---
 $RegInstalled = $false
