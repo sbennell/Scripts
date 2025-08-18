@@ -1,8 +1,11 @@
 #Requires -RunAsAdministrator
 <#
 .SYNOPSIS
-    Installs LockScreenInfo: copies files, sets registry, creates scheduled task, and generates initial lock screen.
+    Installs LockScreenInfo: copies files, sets registry, creates scheduled task, and triggers initial lock screen.
 #>
+
+# --- Script Version ---
+$LockScreenVersion = "1.3.2"
 
 param(
     [Parameter(Mandatory = $false, HelpMessage = "Contact information to display")]
@@ -70,8 +73,9 @@ if (-not (Test-Path $RegPath)) {
     New-Item -Path $RegPath -Force | Out-Null
     Write-Log "Created registry path: $RegPath"
 }
-New-ItemProperty -Path $RegPath -Name "Version" -Value "1.3.0" -PropertyType String -Force | Out-Null
-Write-Log "Set Version = 1.3.0 in $RegPath"
+
+New-ItemProperty -Path $RegPath -Name "Version" -Value $LockScreenVersion -PropertyType String -Force | Out-Null
+Write-Log "Set Version = $LockScreenVersion in $RegPath"
 
 # --- Build Scheduled Task ---
 $TaskName = "LockScreenInfo"
@@ -131,9 +135,9 @@ $Task      = New-ScheduledTask -Action $Action -Trigger @($Trigger1, $Trigger2) 
 Register-ScheduledTask -TaskName $TaskName -InputObject $Task | Out-Null
 Write-Log "Created scheduled task: $TaskName"
 
-# --- Initial lock screen generation ---
-Write-Log "Running initial lock screen generation..."
-Start-Process -FilePath "powershell.exe" -ArgumentList $TaskArgs -Wait -WindowStyle Hidden
-Write-Log "Initial lock screen generation complete."
+# --- Trigger initial lock screen via scheduled task ---
+Write-Log "Triggering initial lock screen generation via scheduled task..."
+Start-ScheduledTask -TaskName $TaskName
+Write-Log "Initial lock screen task triggered."
 
 Write-Log "LockScreenInfo installation completed successfully."
