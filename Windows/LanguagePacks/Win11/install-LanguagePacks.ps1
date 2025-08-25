@@ -5,7 +5,7 @@
     ===========================================================================
     Created on:    4/3/2025
     Last Updated:  27/5/2025
-    Version:       04.03.25-06
+    Version:       04.03.25-08
     Author:        Stewart Bennell (sbennell) - https://github.com/sbennell/
     Filename:      Set-SystemLanguage.ps1
     ===========================================================================
@@ -118,6 +118,18 @@ try {
     } catch {
         Write-Error "An error occurred while applying language settings: $_"
         exit 1
+    }
+
+    # Step 3: Write Intune detection registry key
+    try {
+        $RegPath = "HKLM:\Software\SOE\Lang"
+        if (-not (Test-Path $RegPath)) {
+            New-Item -Path $RegPath -Force | Out-Null
+        }
+        New-ItemProperty -Path $RegPath -Name "Installed" -Value "True" -PropertyType String -Force | Out-Null
+        Write-Output "✅ Registry marker written to $RegPath (Installed=True)"
+    } catch {
+        Write-Warning "Failed to write Intune detection registry key: $_"
     }
 
     Write-Output "`n✅ Script completed successfully. A system restart is recommended to apply all changes."
