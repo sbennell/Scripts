@@ -214,6 +214,16 @@ function Install-ADTDeployment
 		# --- Initial run ---
 		Start-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
 		Start-Sleep -Seconds 3
+		
+		# --- Set PersonalizationCSP registry keys for lock screen ---
+		Write-ADTLogEntry -Message "Setting PersonalizationCSP registry keys for lock screen configuration." -Severity 1
+		
+		Set-ADTRegistryKey -Key "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\PersonalizationCSP" -Name "LockScreenImagePath" -Value "C:\Windows\OEMFiles\lockscreen\lockscreen.jpg" -Type String
+		Set-ADTRegistryKey -Key "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\PersonalizationCSP" -Name "LockScreenImageUrl" -Value "C:\Windows\OEMFiles\lockscreen\lockscreen.jpg" -Type String
+		Set-ADTRegistryKey -Key "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\PersonalizationCSP" -Name "LockScreenImageStatus" -Value 1 -Type DWord
+		
+		Write-ADTLogEntry -Message "PersonalizationCSP registry keys set successfully." -Severity 1
+
 	}
 	catch {
 		Write-ADTLogEntry -Message "Failed to create scheduled task: $($_.Exception.Message)" -Severity 3
