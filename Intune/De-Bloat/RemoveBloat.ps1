@@ -11,7 +11,6 @@
 .Windows 10 and Windows 11 Compatible
 .Removes any unwanted installed applications
 .Removes unwanted services and tasks
-.Removes Edge Surf Game
 
 .INPUTS
 .OUTPUTS
@@ -57,9 +56,7 @@ C:\ProgramData\Debloat\Debloat.log
   Change 14/10/2023 - Updated HP Audio package name
   Change 31/10/2023 - Added PowerAutomateDesktop and update Microsoft.Todos
   Change 01/11/2023 - Added fix for Windows backup removing Shell Components
-  Change 06/11/2023 - Removes Windows CoPilot
   Change 07/11/2023 - HKU fix
-  Change 13/11/2023 - Added CoPilot removal to .Default Users
   Change 14/11/2023 - Added logic to stop errors on HP machines without HP docs installed
   Change 14/11/2023 - Added logic to stop errors on Lenovo machines without some installers
   Change 15/11/2023 - Code Signed for additional security
@@ -126,7 +123,6 @@ C:\ProgramData\Debloat\Debloat.log
   Change 10/12/2024 - Added registry keys to not display screens during OOBE when using Device prep (thanks Rudy)
   Change 07/01/2025 - Added spotlight removal keys
   Change 10/01/2025 - Added Lenovo Now
-  Change 21/01/2025 - Edge Surf game fix
   Change 27/01/2025 - Added Logitech Download assistant
   Change 27/01/2025 - Converted from CRLF to LF
   Change 06/02/2025 - Added the t back to transcrip(t)
@@ -153,7 +149,6 @@ C:\ProgramData\Debloat\Debloat.log
   Change 13/08/2025 - Blocked consumer scheduled tasks
   Change 13/08/2025 - Added option to add your own tasks via parameter
   Change 20/08/2025 - Removed win32_product commands and changed HP wolf
-  Change 29/08/2025 - Fixed issue with Copilot registry key
   Change 09/09/2025 - AHopefully fixed HP apps
 N/A
 #>
@@ -1038,129 +1033,6 @@ if ($version -like "*Windows 10*") {
     write-output "Removed"
 }
 
-############################################################################################################
-#                                           Windows CoPilot                                                #
-#                                                                                                          #
-############################################################################################################
-$version = Get-CimInstance Win32_OperatingSystem | Select-Object -ExpandProperty Caption
-if ($version -like "*Windows 11*") {
-    write-output "Removing Windows Copilot"
-    # Define the registry key and value
-    $registryPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsCopilot"
-    $propertyName = "TurnOffWindowsCopilot"
-    $propertyValue = 1
-
-    # Check if the registry key exists
-    If (!(Test-Path $registryPath)) {
-        # If the registry key doesn't exist, create it
-        New-Item -Path $registryPath -Force | Out-Null
-    }
-
-    # Get the property value
-    $currentValue = Get-ItemProperty -Path $registryPath -Name $propertyName -ErrorAction SilentlyContinue
-
-    # Check if the property exists and if its value is different from the desired value
-    if ($null -eq $currentValue -or $currentValue.$propertyName -ne $propertyValue) {
-        # If the property doesn't exist or its value is different, set the property value
-        Set-ItemProperty -Path $registryPath -Name $propertyName -Value $propertyValue -Type DWord
-    }
-
-
-    ##Grab the default user as well
-    $registryPath = "Registry::HKEY_USERS\.DEFAULT\Software\Policies\Microsoft\Windows\WindowsCopilot"
-    $propertyName = "TurnOffWindowsCopilot"
-    $propertyValue = 1
-
-    # Check if the registry key exists
-    if (!(Test-Path $registryPath)) {
-        # If the registry key doesn't exist, create it
-        New-Item -Path $registryPath -Force | Out-Null
-    }
-
-    # Get the property value
-    $currentValue = Get-ItemProperty -Path $registryPath -Name $propertyName -ErrorAction SilentlyContinue
-
-    # Check if the property exists and if its value is different from the desired value
-    if ($null -eq $currentValue -or $currentValue.$propertyName -ne $propertyValue) {
-        # If the property doesn't exist or its value is different, set the property value
-        Set-ItemProperty -Path $registryPath -Name $propertyName -Value $propertyValue -Type DWord
-    }
-
-
-    ##Load the default hive from c:\users\Default\NTUSER.dat
-    reg load HKU\temphive "c:\users\default\ntuser.dat"
-    $registryPath = "registry::hku\temphive\Software\Policies\Microsoft\Windows\WindowsCopilot"
-    $propertyName = "TurnOffWindowsCopilot"
-    $propertyValue = 1
-
-    # Check if the registry key exists
-    if (!(Test-Path $registryPath)) {
-        # If the registry key doesn't exist, create it
-        [Microsoft.Win32.RegistryKey]$HKUCoPilot = [Microsoft.Win32.Registry]::Users.CreateSubKey("temphive\Software\Policies\Microsoft\Windows\WindowsCopilot", [Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree)
-        $HKUCoPilot.SetValue($propertyName, $propertyValue, [Microsoft.Win32.RegistryValueKind]::DWord)
-
-        $HKUCoPilot.Flush()
-        $HKUCoPilot.Close()
-    }
-
-    [gc]::Collect()
-    [gc]::WaitForPendingFinalizers()
-    reg unload HKU\temphive
-
-
-    write-output "Removed"
-
-
-    foreach ($sid in $UserSIDs) {
-        $registryPath = "Registry::HKU\$sid\SOFTWARE\Policies\Microsoft\Windows\WindowsCopilot"
-        $propertyName = "TurnOffWindowsCopilot"
-        $propertyValue = 1
-
-        # Check if the registry key exists
-        if (!(Test-Path $registryPath)) {
-            # If the registry key doesn't exist, create it
-            New-Item -Path $registryPath -Force | Out-Null
-        }
-
-        # Get the property value
-        $currentValue = Get-ItemProperty -Path $registryPath -Name $propertyName -ErrorAction SilentlyContinue
-
-        # Check if the property exists and if its value is different from the desired value
-        if ($null -eq $currentValue -or $currentValue.$propertyName -ne $propertyValue) {
-            # If the property doesn't exist or its value is different, set the property value
-            Set-ItemProperty -Path $registryPath -Name $propertyName -Value $propertyValue
-        }
-    }
-}
-############################################################################################################
-#                                              Remove Recall                                               #
-#                                                                                                          #
-############################################################################################################
-
-#Turn off Recall
-write-output "Disabling Recall"
-$recall = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsAI"
-If (!(Test-Path $recall)) {
-    New-Item $recall
-}
-Set-ItemProperty $recall DisableAIDataAnalysis -Value 1
-
-
-$recalluser = 'HKCU:\SOFTWARE\Policies\Microsoft\Windows\WindowsAI'
-If (!(Test-Path $recalluser)) {
-    New-Item $recalluser
-}
-Set-ItemProperty $recalluser DisableAIDataAnalysis -Value 1
-
-##Loop through users and do the same
-foreach ($sid in $UserSIDs) {
-    $recallusers = "Registry::HKU\$sid\SOFTWARE\Policies\Microsoft\Windows\WindowsAI"
-    If (!(Test-Path $recallusers)) {
-        New-Item $recallusers
-    }
-    Set-ItemProperty $recallusers DisableAIDataAnalysis -Value 1
-}
-
 
 ############################################################################################################
 #                                             Clear Start Menu                                             #
@@ -1280,17 +1152,6 @@ else {
 New-ItemProperty -Path "HKLM:\Software\Policies\Microsoft\Windows\GameDVR" -Name "AllowgameDVR" -PropertyType DWORD -Value 0 -Force
 New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "SettingsPageVisibility" -PropertyType String -Value "hide:gaming-gamebar;gaming-gamedvr;gaming-broadcasting;gaming-gamemode;gaming-xboxnetworking" -Force
 Remove-Item C:\Windows\Temp\SetACL.exe -recurse
-
-############################################################################################################
-#                                        Disable Edge Surf Game                                            #
-#                                                                                                          #
-############################################################################################################
-$surf = "HKLM:\SOFTWARE\Policies\Microsoft\Edge"
-If (!(Test-Path $surf)) {
-    New-Item $surf
-}
-New-ItemProperty -Path $surf -Name 'AllowSurfGame' -Value 0 -PropertyType DWord
-
 
 ############################################################################################################
 #                                       Remove Logitech Download Assistant                                 #
