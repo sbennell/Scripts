@@ -1,0 +1,1 @@
+remove-printer -name '\\print\Library KM BH C451i'
