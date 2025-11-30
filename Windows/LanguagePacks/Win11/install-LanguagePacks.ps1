@@ -284,7 +284,7 @@ try {
 
     # Create Intune detection marker
     Write-Host "`nCreating Intune detection marker..." -ForegroundColor Yellow
-    New-Item -Path "HKLM:\Software\SOE\Language" -Force | Out-Null
+    New-Item -Path "HKLM:\Software\SOE\Lang" -Force | Out-Null
     Set-ItemProperty -Path "HKLM:\Software\SOE\Lang" -Name "Installed" -Type String -Value "true"
     Set-ItemProperty -Path "HKLM:\Software\SOE\Lang" -Name "Language" -Type String -Value $LanguageSetting
     Set-ItemProperty -Path "HKLM:\Software\SOE\Lang" -Name "InstallDate" -Type String -Value (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
